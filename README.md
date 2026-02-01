@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🏠 Smart Home Controller
+# 🏠 Smart Home Server
 
 **Zigbee Device Management & Garage Door Automation**
 
-A Spring Boot-based smart home controller for managing Zigbee devices, with a focus on garage door automation and monitoring.
+A Spring Boot-based smart home server for managing Zigbee devices, with a focus on garage door automation and monitoring.
 
 [![Java Version](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
