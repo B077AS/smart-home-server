@@ -1,0 +1,126 @@
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 500px;
+  padding: var(--spacing-lg);
+}
+
+.login-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-xxl);
+}
+
+.login-header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl);
+}
+
+.logo-icon {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-md);
+}
+
+.icon-home {
+  font-size: 48px;
+  color: var(--primary-color);
+  margin-bottom: var(--spacing-md);
+}
+
+.login-header h1 {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+.login-header p {
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.login-form .input-wrapper input {
+  padding-left: 48px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: var(--spacing-sm);
+  background: none;
+  border: none;
+  padding: var(--spacing-sm);
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-secondary);
+  transition: color 0.2s;
+  border-radius: var(--radius-sm);
+}
+
+.toggle-password:hover {
+  color: var(--text-primary);
+  background: var(--background);
+}
+
+.btn-login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  margin-top: var(--spacing-md);
+}
+
+.btn-login:hover {
+  background: var(--primary-dark);
+}
+
+.btn-login:active {
+  transform: scale(0.98);
+}
+
+.btn-arrow {
+  font-size: 20px;
+  transition: transform 0.2s;
+}
+
+.btn-login:hover .btn-arrow {
+  transform: translateX(4px);
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: var(--spacing-md);
+  }
+
+  .login-card {
+    padding: var(--spacing-lg);
+  }
+
+  .logo-icon {
+    width: 56px;
+    height: 56px;
+  }
+}
