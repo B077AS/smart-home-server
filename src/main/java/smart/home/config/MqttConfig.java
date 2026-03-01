@@ -44,11 +44,18 @@ public class MqttConfig {
                 .initialDelay(1, TimeUnit.SECONDS)
                 .maxDelay(30, TimeUnit.SECONDS)
                 .applyAutomaticReconnect()
+                .addConnectedListener(ctx -> log.info("MQTT reconnected successfully"))
+                .addDisconnectedListener(ctx -> log.warn(
+                        "MQTT disconnected. Cause: {}, Reconnect: {}",
+                        ctx.getCause().getMessage(),
+                        ctx.getReconnector().isReconnect()
+                ))
                 .buildAsync();
 
         try {
             client.connectWith()
                     .keepAlive(60)
+                    .cleanSession(true)
                     .simpleAuth()
                     .username(username)
                     .password(password.getBytes(StandardCharsets.UTF_8))

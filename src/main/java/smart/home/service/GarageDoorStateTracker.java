@@ -27,7 +27,6 @@ public class GarageDoorStateTracker {
     private static final double POWER_LIGHT_THRESHOLD = 20.0;  // Above this, light is likely on
     private static final double POWER_MOVING_MIN = 30.0;       // Minimum power when moving
     private static final double POWER_MOVING_SUSTAINED = 45.0; // Sustained movement threshold
-    private static final double POWER_MOVING_PEAK = 100.0;     // Peak power during movement
 
     // Timing thresholds
     private static final long OPENING_TIME_TYPICAL = 13000;    // ~13 seconds to open
@@ -40,7 +39,6 @@ public class GarageDoorStateTracker {
     private static final long MOVEMENT_CONFIRMATION_TIMEOUT = 25000; // 25 seconds grace period
     private static final long MOVEMENT_CONFIRMATION_WARN = 15000;     // Warn after 15s, don't fail yet
     private static final long MINIMAL_MOVEMENT_POWER_DROP_TIME = 3000; // Power must drop within 3s for 2cm stuck
-    private static final long POWER_SUSTAINED_THRESHOLD = 3000;      // Power must stay high for 3s
 
     // Vibration sensor angle thresholds - NEW
     private static final int SIGNIFICANT_ANGLE_CHANGE = 30; // Degrees - significant rotation indicating movement
@@ -317,7 +315,7 @@ public class GarageDoorStateTracker {
                     power >= POWER_LIGHT_THRESHOLD &&
                     power < POWER_MOVING_MIN &&
                     timeSincePeak <= MINIMAL_MOVEMENT_POWER_DROP_TIME &&
-                    timeSinceMotorStart >= 2000) {  // At least 2s elapsed to avoid false positives
+                    timeSinceMotorStart >= 1500) {  // At least 2s elapsed to avoid false positives
 
                 log.warn("STUCK: MINIMAL MOVEMENT (1-3cm) | peak={}W@T+{}ms -> cur={}W@T+{}ms | dropTime={}ms (max={}ms) | tilt={} (unchanged) | Analysis: moved 1-3cm then stuck",
                         String.format("%.1f", peakPowerSinceMotorStart),
