@@ -3,13 +3,14 @@ package smart.home.config;
 import com.hivemq.client.mqtt.MqttClient;
 import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -28,8 +29,8 @@ public class MqttConfig {
     @Value("${mqtt.password}")
     private String password;
 
-    @Value("${mqtt.connection.timeout:10}")
-    private int connectionTimeoutSeconds;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
     @Bean
     public Mqtt3AsyncClient mqttClient() {
@@ -37,39 +38,40 @@ public class MqttConfig {
 
         Mqtt3AsyncClient client = MqttClient.builder()
                 .useMqttVersion3()
-                .identifier(UUID.randomUUID().toString())
+                .identifier("smart-home-" + UUID.randomUUID().toString().substring(0, 8))
                 .serverHost(brokerHost)
                 .serverPort(brokerPort)
                 .automaticReconnect()
                 .initialDelay(1, TimeUnit.SECONDS)
                 .maxDelay(30, TimeUnit.SECONDS)
                 .applyAutomaticReconnect()
-                .addConnectedListener(ctx -> log.info("MQTT reconnected successfully"))
-                .addDisconnectedListener(ctx -> log.warn(
-                        "MQTT disconnected. Cause: {}, Reconnect: {}",
-                        ctx.getCause().getMessage(),
-                        ctx.getReconnector().isReconnect()
-                ))
+                .addConnectedListener(ctx -> {
+                    log.info("MQTT connected to {}:{}", brokerHost, brokerPort);
+                    eventPublisher.publishEvent(new MqttConnectedEvent(this));
+                })
+                .addDisconnectedListener(ctx -> {
+                    String cause = ctx.getCause().getMessage();
+                    if (cause != null && cause.contains("NOT_AUTHORIZED")) {
+                        log.error("MQTT broker rejected authentication — verify mqtt.username and mqtt.password in local.properties. Reconnect: {}", ctx.getReconnector().isReconnect());
+                    } else {
+                        log.warn("MQTT disconnected. Cause: {}, Reconnect: {}", cause, ctx.getReconnector().isReconnect());
+                    }
+                })
                 .buildAsync();
 
-        try {
-            client.connectWith()
-                    .keepAlive(60)
-                    .cleanSession(true)
-                    .simpleAuth()
-                    .username(username)
-                    .password(password.getBytes(StandardCharsets.UTF_8))
-                    .applySimpleAuth()
-                    .send()
-                    .get(connectionTimeoutSeconds, TimeUnit.SECONDS);
-
-            log.info("MQTT client connected successfully to {}:{}", brokerHost, brokerPort);
-            log.info("MQTT client state: {}", client.getState());
-
-        } catch (Exception e) {
-            log.error("Failed to connect MQTT client within {} seconds", connectionTimeoutSeconds, e);
-            throw new IllegalStateException("MQTT client connection failed", e);
-        }
+        client.connectWith()
+                .keepAlive(60)
+                .cleanSession(true)
+                .simpleAuth()
+                .username(username)
+                .password(password.getBytes(StandardCharsets.UTF_8))
+                .applySimpleAuth()
+                .send()
+                .whenComplete((connAck, throwable) -> {
+                    if (throwable != null) {
+                        log.warn("Initial MQTT connection failed, will retry automatically: {}", throwable.getMessage());
+                    }
+                });
 
         return client;
     }

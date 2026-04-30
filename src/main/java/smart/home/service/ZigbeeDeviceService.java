@@ -11,6 +11,9 @@ import org.springframework.stereotype.Service;
 import smart.home.dto.GarageDoorStatus;
 
 import jakarta.annotation.PostConstruct;
+import org.springframework.context.event.EventListener;
+import smart.home.config.MqttConnectedEvent;
+
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +38,19 @@ public class ZigbeeDeviceService {
     private static final String PLUG = "GarageDoorPlug";
 
     @PostConstruct
-    public void subscribeToDevices() {
+    public void init() {
+        if (mqttClient.getState().isConnected()) {
+            subscribeToDevices();
+        }
+    }
+
+    @EventListener
+    public void onMqttConnected(MqttConnectedEvent event) {
+        log.info("MQTT connected — subscribing to Zigbee devices");
+        subscribeToDevices();
+    }
+
+    private void subscribeToDevices() {
         // Subscribe to all devices
         CompletableFuture<Void> vibrationSub = subscribeToDevice(VIBRATION_SENSOR);
         CompletableFuture<Void> tiltSub = subscribeToDevice(TILT_SENSOR);

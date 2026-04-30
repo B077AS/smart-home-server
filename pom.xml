@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.3</version>
+		<version>4.0.5</version>
 	</parent>
 
 	<groupId>smart.home</groupId>
@@ -81,13 +81,13 @@
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk18on</artifactId>
-			<version>1.83</version>
+			<version>1.84</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.bouncycastle/bcpkix-jdk18on -->
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcpkix-jdk18on</artifactId>
-			<version>1.83</version>
+			<version>1.84</version>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/com.google.code.gson/gson -->
 		<dependency>

@@ -88,6 +88,10 @@ public class GarageDoorStateTracker {
     private Integer angleYAtMotorStart = null;
     private Integer angleZAtMotorStart = null;
 
+    // Post-stuck recovery context — survives reset() so the next trigger can infer the correct reversal direction
+    private GarageDoorState stateBeforeReset = null;
+    private Boolean tiltAtReset = null;
+
     public synchronized GarageDoorStatus updateState(
             Map<String, Object> plugState,
             Map<String, Object> tiltSensorState,
@@ -289,14 +293,27 @@ public class GarageDoorStateTracker {
             log.debug("Captured angles at motor start: X={}, Y={}, Z={}",
                     angleXAtMotorStart, angleYAtMotorStart, angleZAtMotorStart);
 
-            // Determine intended direction
-            if (tiltOpen != null) {
+            // Determine intended direction, accounting for post-stuck recovery.
+            // After a stuck event the door barely moved, so tilt reads the same as before.
+            // Normal tilt inference would pick the same direction that just got stuck — wrong.
+            // Use the saved stuck state to infer the reversal direction instead.
+            if (stateBeforeReset == GarageDoorState.STUCK_OPENING &&
+                    tiltAtReset != null && tiltAtReset.equals(tiltOpen)) {
+                intendedDirection = GarageDoorState.CLOSING;
+                log.info("Post-stuck recovery: reversing to CLOSING (was STUCK_OPENING, tilt unchanged)");
+            } else if (stateBeforeReset == GarageDoorState.STUCK_CLOSING &&
+                    tiltAtReset != null && tiltAtReset.equals(tiltOpen)) {
+                intendedDirection = GarageDoorState.OPENING;
+                log.info("Post-stuck recovery: reversing to OPENING (was STUCK_CLOSING, tilt unchanged)");
+            } else if (tiltOpen != null) {
                 intendedDirection = tiltOpen ? GarageDoorState.OPENING : GarageDoorState.CLOSING;
                 log.debug("Intended direction: {} (tilt={})", intendedDirection, tiltOpen);
             } else {
                 log.warn("Cannot determine direction - no tilt data");
                 intendedDirection = null;
             }
+            stateBeforeReset = null;
+            tiltAtReset = null;
         }
 
         if (motorStartTime != null && !movementConfirmed) {
@@ -367,10 +384,28 @@ public class GarageDoorStateTracker {
 
             // Still within grace period, waiting for tilt or angle to change
             if (timeSinceMotorStart <= MOVEMENT_CONFIRMATION_TIMEOUT) {
-                log.debug("Waiting for confirmation: elapsed={}ms, grace={}ms",
-                        timeSinceMotorStart, MOVEMENT_CONFIRMATION_TIMEOUT);
-                if (intendedDirection != null) {
-                    return intendedDirection;
+                if (power < POWER_MOVING_MIN) {
+                    // Motor stopped before movement was confirmed (brief recovery reversal).
+                    // Reset now so the next trigger starts with a clean motor state.
+                    log.info("Motor stopped during grace period without movement confirmed ({}ms) — resetting for next trigger", timeSinceMotorStart);
+                    motorStartTime = null;
+                    tiltStateAtMotorStart = null;
+                    movementConfirmed = false;
+                    intendedDirection = null;
+                    peakPowerSinceMotorStart = null;
+                    peakPowerTime = null;
+                    lastHighPowerTime = null;
+                    powerDropDetected = false;
+                    angleXAtMotorStart = null;
+                    angleYAtMotorStart = null;
+                    angleZAtMotorStart = null;
+                    // Fall through to idle/light logic
+                } else {
+                    log.debug("Waiting for confirmation: elapsed={}ms, grace={}ms",
+                            timeSinceMotorStart, MOVEMENT_CONFIRMATION_TIMEOUT);
+                    if (intendedDirection != null) {
+                        return intendedDirection;
+                    }
                 }
             }
         }
@@ -677,6 +712,9 @@ public class GarageDoorStateTracker {
 
     public synchronized void reset() {
         log.info("Resetting garage door state tracker");
+        // Preserve stuck context so the next motor trigger knows to reverse direction
+        stateBeforeReset = currentState;
+        tiltAtReset = lastTiltSensorState;
         currentState = GarageDoorState.UNKNOWN;
         lastStateChange = LocalDateTime.now();
         operationStartTime = null;
