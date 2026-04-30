@@ -1,78 +1,84 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" data-theme="purple">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login</title>
-    <link rel="stylesheet" th:href="@{/css/base.css}">
-    <link rel="stylesheet" th:href="@{/css/login.css}">
-    <link rel="stylesheet" th:href="@{/css/icons.css}">
-    <link rel="icon" type="image/svg+xml" th:href="@{/icon.svg}" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login</title>
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/icons.css}">
+  <link rel="icon" type="image/svg+xml" th:href="@{/icon.svg}">
 </head>
-<body>
-<div class="login-container">
-    <div class="login-card">
-        <div class="login-header">
-            <img th:src="@{/icon.svg}" alt="Smart Home" class="logo-icon">
-            <h1>Smart Home Admin</h1>
-            <p>Control Panel Access</p>
-        </div>
+<body class="login-page">
 
-        <form th:action="@{/admin/login}" method="post" class="login-form">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-
-            <div th:if="${error}" class="alert alert-error">
-                <i class="mdi mdi-alert-circle alert-icon"></i>
-                <span th:text="${error}">Invalid username or password</span>
-            </div>
-
-            <div th:if="${success}" class="alert alert-success">
-                <i class="mdi mdi-check-circle alert-icon"></i>
-                <span th:text="${success}">You have been logged out successfully</span>
-            </div>
-
-            <div class="form-group">
-                <label for="username">Username</label>
-                <div class="input-wrapper">
-                    <i class="mdi mdi-account input-icon"></i>
-                    <input type="text" id="username" name="username" required autofocus>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrapper">
-                    <i class="mdi mdi-lock input-icon"></i>
-                    <input type="password" id="password" name="password" required>
-                    <button type="button" class="toggle-password" onclick="togglePassword()">
-                        <i class="mdi mdi-eye" id="eye-icon"></i>
-                    </button>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-login">
-                <span>Sign In</span>
-                <i class="mdi mdi-arrow-right btn-arrow"></i>
-            </button>
-        </form>
+<div class="login-box">
+  <div class="login-brand">
+    <img th:src="@{/icon.svg}" alt="" class="login-logo">
+    <div>
+      <div class="login-name">Smart Home</div>
+      <div class="login-sub">Admin Panel</div>
     </div>
+  </div>
+
+  <div th:if="${error}" class="flash flash-err">
+    <i class="mdi mdi-alert-circle"></i>
+    <span th:text="${error}"></span>
+  </div>
+  <div th:if="${success}" class="flash flash-ok">
+    <i class="mdi mdi-check-circle"></i>
+    <span th:text="${success}"></span>
+  </div>
+
+  <form th:action="@{/admin/login}" method="post">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+    <div class="field">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="username" autofocus required>
+    </div>
+
+    <div class="field">
+      <label for="password">Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="password" name="password" autocomplete="current-password" required>
+        <button type="button" class="pw-toggle" onclick="togglePw()">
+          <i class="mdi mdi-eye" id="pw-eye"></i>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn-login">Sign In</button>
+  </form>
+</div>
+
+<div class="login-footer">
+  <div class="theme-switcher">
+    <button class="theme-dot" data-t="purple" onclick="setTheme('purple')"></button>
+    <button class="theme-dot" data-t="blue"   onclick="setTheme('blue')"></button>
+    <button class="theme-dot" data-t="green"  onclick="setTheme('green')"></button>
+    <button class="theme-dot" data-t="red"    onclick="setTheme('red')"></button>
+  </div>
 </div>
 
 <script>
-    function togglePassword() {
-        const passwordInput = document.getElementById('password');
-        const eyeIcon = document.getElementById('eye-icon');
+  (function () {
+    const t = localStorage.getItem('theme') || 'purple';
+    document.documentElement.dataset.theme = t;
+    document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.t === t));
+  })();
 
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            eyeIcon.classList.remove('mdi-eye');
-            eyeIcon.classList.add('mdi-eye-off');
-        } else {
-            passwordInput.type = 'password';
-            eyeIcon.classList.remove('mdi-eye-off');
-            eyeIcon.classList.add('mdi-eye');
-        }
-    }
+  function setTheme(t) {
+    document.documentElement.dataset.theme = t;
+    localStorage.setItem('theme', t);
+    document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.t === t));
+  }
+
+  function togglePw() {
+    const inp = document.getElementById('password');
+    const eye = document.getElementById('pw-eye');
+    const hide = inp.type === 'password';
+    inp.type = hide ? 'text' : 'password';
+    eye.className = hide ? 'mdi mdi-eye-off' : 'mdi mdi-eye';
+  }
 </script>
 </body>
 </html>

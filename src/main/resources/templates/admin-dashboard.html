@@ -1,758 +1,679 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" data-theme="purple">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
-    <link rel="stylesheet" th:href="@{/css/base.css}">
-    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
-    <link rel="stylesheet" th:href="@{/css/icons.css}">
-    <link rel="icon" type="image/svg+xml" th:href="@{/icon.svg}" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/icons.css}">
+  <link rel="icon" type="image/svg+xml" th:href="@{/icon.svg}">
 </head>
 <body>
-<div class="dashboard-container">
-    <!-- Header -->
-    <div class="dashboard-header">
-        <div class="header-left">
-            <img th:src="@{/icon.svg}" alt="Smart Home" class="logo-icon">
-            <div>
-                <h1>Admin Dashboard</h1>
-                <p>Welcome back, <span th:text="${username}">Admin</span></p>
-            </div>
-        </div>
-        <form th:action="@{/logout}" method="post">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-            <button type="submit" class="btn-logout">
-                <i class="mdi mdi-logout"></i>
-                Logout
-            </button>
-        </form>
+<div class="admin-layout">
+
+  <!-- ── Header ───────────────────────────────────────────── -->
+  <header class="admin-hdr">
+    <div class="hdr-brand">
+      <img th:src="@{/icon.svg}" alt="" class="hdr-logo">
+      <span class="hdr-title">Smart Home</span>
+    </div>
+    <span class="hdr-sep"></span>
+    <span class="hdr-user">Welcome, <strong th:text="${username}">Admin</strong></span>
+    <div class="theme-switcher">
+      <button class="theme-dot" data-t="purple" onclick="setTheme('purple')"></button>
+      <button class="theme-dot" data-t="blue"   onclick="setTheme('blue')"></button>
+      <button class="theme-dot" data-t="green"  onclick="setTheme('green')"></button>
+      <button class="theme-dot" data-t="red"    onclick="setTheme('red')"></button>
+    </div>
+    <form th:action="@{/logout}" method="post">
+      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+      <button type="submit" class="btn-logout"><i class="mdi mdi-logout"></i> Logout</button>
+    </form>
+  </header>
+
+  <!-- ── Main ─────────────────────────────────────────────── -->
+  <main class="admin-main">
+
+    <div th:if="${success}" class="flash flash-ok" style="margin-bottom:16px">
+      <i class="mdi mdi-check-circle"></i>
+      <span th:text="${success}"></span>
+    </div>
+    <div th:if="${error}" class="flash flash-err" style="margin-bottom:16px">
+      <i class="mdi mdi-alert-circle"></i>
+      <span th:text="${error}"></span>
     </div>
 
-    <!-- Flash Messages -->
-    <div th:if="${success}" class="alert alert-success">
-        <i class="mdi mdi-check-circle"></i>
-        <span th:text="${success}">Success message</span>
-    </div>
-
-    <div th:if="${error}" class="alert alert-error">
-        <i class="mdi mdi-alert-circle"></i>
-        <span th:text="${error}">Error message</span>
-    </div>
-
-    <!-- Plug Schedule Section -->
-    <div class="schedule-section">
-        <div class="schedule-header" onclick="toggleSchedule()">
-            <h3>
-                <i class="mdi mdi-calendar-clock"></i>
-                Smart Plug Scheduling
-            </h3>
-            <i class="mdi mdi-chevron-down schedule-toggle" id="scheduleToggle"></i>
-        </div>
-        <div class="schedule-content" id="scheduleContent">
-            <div class="schedule-grid">
-                <!-- Weekday Schedule -->
-                <div class="schedule-card">
-                    <h4>
-                        <i class="mdi mdi-calendar-week"></i>
-                        Weekday Schedule (Mon-Fri)
-                    </h4>
-                    <div class="time-inputs">
-                        <div class="time-input-group">
-                            <label>Turn OFF</label>
-                            <input type="time" id="weekdayOffTime" value="00:00">
-                        </div>
-                        <div class="time-input-group">
-                            <label>Turn ON</label>
-                            <input type="time" id="weekdayOnTime" value="06:00">
-                        </div>
-                    </div>
-                    <div class="schedule-actions">
-                        <button class="btn-schedule btn-schedule-save" onclick="saveWeekdaySchedule()">
-                            <i class="mdi mdi-content-save"></i>
-                            Save
-                        </button>
-                        <button class="btn-schedule btn-schedule-toggle enabled" id="weekdayToggle" onclick="toggleWeekdaySchedule()">
-                            <i class="mdi mdi-power"></i>
-                            Enabled
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Weekend Schedule -->
-                <div class="schedule-card">
-                    <h4>
-                        <i class="mdi mdi-calendar-weekend"></i>
-                        Weekend Schedule (Sat-Sun)
-                    </h4>
-                    <div class="time-inputs">
-                        <div class="time-input-group">
-                            <label>Turn OFF</label>
-                            <input type="time" id="weekendOffTime" value="00:00">
-                        </div>
-                        <div class="time-input-group">
-                            <label>Turn ON</label>
-                            <input type="time" id="weekendOnTime" value="07:00">
-                        </div>
-                    </div>
-                    <div class="schedule-actions">
-                        <button class="btn-schedule btn-schedule-save" onclick="saveWeekendSchedule()">
-                            <i class="mdi mdi-content-save"></i>
-                            Save
-                        </button>
-                        <button class="btn-schedule btn-schedule-toggle enabled" id="weekendToggle" onclick="toggleWeekendSchedule()">
-                            <i class="mdi mdi-power"></i>
-                            Enabled
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Exceptions Section -->
-            <div class="exceptions-section">
-                <div class="exceptions-header">
-                    <h4>Schedule Exceptions</h4>
-                    <button class="btn-add-exception" onclick="toggleExceptionForm()">
-                        <i class="mdi mdi-plus"></i>
-                        Add Exception
-                    </button>
-                </div>
-
-                <!-- Exception Form -->
-                <div class="exception-form" id="exceptionForm">
-                    <div class="exception-form-grid">
-                        <div class="time-input-group">
-                            <label style="display: flex; align-items: center; gap: 6px;">
-                                <input type="checkbox" id="multiDateMode" onchange="toggleMultiDateMode()" style="width: auto; margin: 0;">
-                                <span>Select multiple dates</span>
-                            </label>
-                        </div>
-                        <div class="time-input-group" id="singleDateContainer">
-                            <label>Date</label>
-                            <input type="date" id="exceptionDate">
-                        </div>
-                        <div id="multiDateContainer" style="display: none;">
-                            <div class="time-input-group">
-                                <label>Start Date</label>
-                                <input type="date" id="exceptionStartDate">
-                            </div>
-                            <div class="time-input-group">
-                                <label>End Date</label>
-                                <input type="date" id="exceptionEndDate">
-                            </div>
-                        </div>
-                        <div class="time-inputs">
-                            <div class="time-input-group">
-                                <label>Turn OFF</label>
-                                <input type="time" id="exceptionOffTime" value="00:00">
-                            </div>
-                            <div class="time-input-group">
-                                <label>Turn ON</label>
-                                <input type="time" id="exceptionOnTime" value="06:00">
-                            </div>
-                        </div>
-                        <div class="time-input-group">
-                            <label>Description (Optional)</label>
-                            <input type="text" id="exceptionDesc" placeholder="e.g., Holiday, Vacation week">
-                        </div>
-                        <div class="exception-form-actions">
-                            <button class="btn-schedule btn-schedule-save" onclick="saveException()">
-                                <i class="mdi mdi-check"></i>
-                                <span id="createButtonText">Create Exception</span>
-                            </button>
-                            <button class="btn-schedule btn-schedule-toggle" onclick="toggleExceptionForm()">
-                                <i class="mdi mdi-close"></i>
-                                Cancel
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Exception List -->
-                <div class="exception-list" id="exceptionList">
-                    <div class="empty-exceptions">No schedule exceptions</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats -->
+    <!-- ── Stats ─────────────────────────────────────────── -->
     <div class="stats-grid">
-        <div class="stat-card">
-            <i class="mdi mdi-account-multiple"></i>
-            <div>
-                <div class="stat-value" th:text="${totalUsers}">0</div>
-                <div class="stat-label">Users</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="mdi mdi-garage-variant"></i>
-            <div>
-                <div class="stat-value" th:text="${totalGarageAccess}">0</div>
-                <div class="stat-label">G-Door Triggers</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="mdi mdi-garage-variant"></i>
-            <div>
-                <div class="stat-value" th:text="${garageAccess24h}">0</div>
-                <div class="stat-label">G-Door Triggers 24h</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="mdi mdi-power-plug"></i>
-            <div>
-                <div class="stat-value" th:text="${totalPlugActivity}">0</div>
-                <div class="stat-label">GD-Plug Triggers</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="mdi mdi-power-plug"></i>
-            <div>
-                <div class="stat-value" th:text="${plugActivity24h}">0</div>
-                <div class="stat-label">GD-Plug Triggers 24h</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <i class="mdi mdi-state-machine"></i>
-            <div>
-                <div class="stat-value" th:text="${garageDoorStateChanges24h}">0</div>
-                <div class="stat-label">GD State Changes 24h</div>
-            </div>
-        </div>
+      <div class="stat-card s-closed">
+        <div class="stat-lbl">Door Closed</div>
+        <div class="stat-val" th:text="${idleClosedCount}">0</div>
+        <i class="mdi mdi-garage stat-icon"></i>
+      </div>
+      <div class="stat-card s-open">
+        <div class="stat-lbl">Door Open</div>
+        <div class="stat-val" th:text="${idleOpenCount}">0</div>
+        <i class="mdi mdi-garage-open stat-icon"></i>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Triggers 24h</div>
+        <div class="stat-val" th:text="${garageAccess24h}">0</div>
+        <i class="mdi mdi-remote stat-icon"></i>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Switch Activity 24h</div>
+        <div class="stat-val" th:text="${plugActivity24h}">0</div>
+        <i class="mdi mdi-power-plug stat-icon"></i>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">Users</div>
+        <div class="stat-val" th:text="${totalUsers}">0</div>
+        <i class="mdi mdi-account-multiple stat-icon"></i>
+      </div>
+      <div class="stat-card">
+        <div class="stat-lbl">State Changes 24h</div>
+        <div class="stat-val" th:text="${garageDoorStateChanges24h}">0</div>
+        <i class="mdi mdi-state-machine stat-icon"></i>
+      </div>
     </div>
 
-    <!-- Main Grid -->
-    <div class="main-grid">
+    <!-- ── Tabs bar ───────────────────────────────────────── -->
+    <div class="tabs-bar" id="tabs-bar">
+      <button class="tab-btn active" data-tab="door"   onclick="switchTab('door',   this)"><i class="mdi mdi-state-machine"></i><span class="tab-lbl"> Door States</span></button>
+      <button class="tab-btn"        data-tab="access" onclick="switchTab('access', this)"><i class="mdi mdi-garage-variant"></i><span class="tab-lbl"> Access Log</span></button>
+      <button class="tab-btn"        data-tab="plug"   onclick="switchTab('plug',   this)"><i class="mdi mdi-power-plug"></i><span class="tab-lbl"> Smart Switch</span></button>
+      <button class="tab-btn"        data-tab="users"  onclick="switchTab('users',  this)"><i class="mdi mdi-account-key"></i><span class="tab-lbl"> Users</span></button>
+      <button class="tab-btn"        data-tab="sched"  onclick="switchTab('sched',  this)"><i class="mdi mdi-calendar-clock"></i><span class="tab-lbl"> Switch Schedule</span></button>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  TAB: Door States                                   -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-pane active" id="tab-door">
+      <div class="tbl-wrap">
+        <div class="tbl-hdr">
+          <span class="tbl-title">Door State Changes</span>
+          <div class="tbl-filters" id="door-filters">
+            <button class="f-btn active" onclick="filterDoor('all',     this)">All</button>
+            <button class="f-btn"        onclick="filterDoor('closed',  this)">Closed</button>
+            <button class="f-btn"        onclick="filterDoor('open',    this)">Open</button>
+            <button class="f-btn"        onclick="filterDoor('moving',  this)">Moving</button>
+            <button class="f-btn"        onclick="filterDoor('stuck',   this)">Stuck</button>
+          </div>
+        </div>
+
+        <table class="data-tbl" id="tbl-door">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>From</th>
+              <th></th>
+              <th>To</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="log : ${garageDoorStateLogs}"
+                th:with="rowCls=${log.newState == 'IDLE_CLOSED' ? 'row-closed' : (log.newState == 'IDLE_OPEN' ? 'row-open' : '')},
+                         newCls=${log.newState == 'IDLE_CLOSED' ? 'sb-closed' : (log.newState == 'IDLE_OPEN' ? 'sb-open' : (#strings.contains(log.newState,'STUCK') ? 'sb-stuck' : ((log.newState == 'OPENING' or log.newState == 'CLOSING' or log.newState == 'STOPPED_PARTIAL' or log.newState == 'IDLE_WITH_LIGHT') ? 'sb-moving' : 'sb-other')))},
+                         oldCls=${log.oldState == 'IDLE_CLOSED' ? 'sb-closed' : (log.oldState == 'IDLE_OPEN' ? 'sb-open' : (#strings.contains(log.oldState,'STUCK') ? 'sb-stuck' : ((log.oldState == 'OPENING' or log.oldState == 'CLOSING' or log.oldState == 'STOPPED_PARTIAL' or log.oldState == 'IDLE_WITH_LIGHT') ? 'sb-moving' : 'sb-other')))}"
+                th:class="${rowCls}"
+                th:attr="data-state=${log.newState}">
+              <td class="ts" th:text="${#temporals.format(log.timestamp, 'MMM dd · HH:mm:ss')}"></td>
+              <td><span class="sbadge" th:classappend="${oldCls}" th:text="${log.oldState}"></span></td>
+              <td class="arrow"><i class="mdi mdi-arrow-right"></i></td>
+              <td><span class="sbadge" th:classappend="${newCls}" th:text="${log.newState}"></span></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(garageDoorStateLogs)}">
+              <td colspan="4" style="text-align:center;padding:32px;color:var(--tx-3)">No state changes recorded</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tbl-ftr">
+          <span class="pg-info" id="info-door"></span>
+          <nav class="pg-nav" id="pg-door"></nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  TAB: Access Log                                    -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-access">
+      <div class="tbl-wrap">
+        <div class="tbl-hdr">
+          <span class="tbl-title">Garage Access Log</span>
+        </div>
+
+        <table class="data-tbl" id="tbl-access">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>User</th>
+              <th>Status</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="log : ${garageLogs}">
+              <td class="ts" th:text="${#temporals.format(log.timestamp, 'MMM dd · HH:mm:ss')}"></td>
+              <td th:text="${log.username}"></td>
+              <td>
+                <span class="badge" th:classappend="${log.success ? 'b-ok' : 'b-err'}"
+                      th:text="${log.success ? 'OK' : 'FAIL'}"></span>
+              </td>
+              <td class="err-msg" th:text="${!log.success and log.errorMessage != null ? log.errorMessage : ''}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(garageLogs)}">
+              <td colspan="4" style="text-align:center;padding:32px;color:var(--tx-3)">No access logs</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tbl-ftr">
+          <span class="pg-info" id="info-access"></span>
+          <nav class="pg-nav" id="pg-access"></nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  TAB: Plug Activity                                 -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-plug">
+      <div class="tbl-wrap">
+        <div class="tbl-hdr">
+          <span class="tbl-title">Smart Switch Activity</span>
+        </div>
+
+        <table class="data-tbl" id="tbl-plug">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Status</th>
+              <th>Error</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="log : ${plugLogs}">
+              <td class="ts" th:text="${#temporals.format(log.timestamp, 'MMM dd · HH:mm:ss')}"></td>
+              <td th:text="${log.username}"></td>
+              <td>
+                <span class="badge" th:classappend="${log.action == 'ON' ? 'b-acc' : 'b-mute'}"
+                      th:text="${log.action}"></span>
+              </td>
+              <td>
+                <span class="badge" th:classappend="${log.success ? 'b-ok' : 'b-err'}"
+                      th:text="${log.success ? 'OK' : 'FAIL'}"></span>
+              </td>
+              <td class="err-msg" th:text="${!log.success and log.errorMessage != null ? log.errorMessage : ''}"></td>
+            </tr>
+            <tr th:if="${#lists.isEmpty(plugLogs)}">
+              <td colspan="5" style="text-align:center;padding:32px;color:var(--tx-3)">No switch activity</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="tbl-ftr">
+          <span class="pg-info" id="info-plug"></span>
+          <nav class="pg-nav" id="pg-plug"></nav>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  TAB: Users                                         -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-users">
+      <div class="users-layout">
+
         <!-- Super Admin -->
         <div class="panel">
-            <div class="panel-header">
-                <h2><i class="mdi mdi-shield-crown"></i> Super Admin</h2>
+          <div class="panel-hdr">Super Admin</div>
+          <div class="panel-body" th:if="${superAdmin != null}">
+            <div class="super-name" th:text="${superAdmin.username}"></div>
+            <div class="super-meta" th:if="${superAdmin.lastLogin}">
+              Last login:
+              <strong th:text="${#temporals.format(superAdmin.lastLogin, 'MMM dd, HH:mm')}"></strong>
             </div>
-            <div class="panel-body">
-                <div th:if="${superAdmin != null}" class="data-table">
-                    <div class="table-row">
-                        <div class="row-content">
-                            <div class="row-main">
-                                <span class="username" th:text="${superAdmin.username}">admin</span>
-                            </div>
-                            <div th:if="${superAdmin.lastLogin}" class="row-meta">
-                                <i class="mdi mdi-clock-outline"></i>
-                                <span th:text="${#temporals.format(superAdmin.lastLogin, 'MMM dd, HH:mm')}">Last login</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <div class="super-meta" th:unless="${superAdmin.lastLogin}" style="color:var(--tx-3)">No logins recorded</div>
+          </div>
+          <div class="panel-body" th:unless="${superAdmin != null}" style="color:var(--tx-3);font-size:13px">
+            No super admin configured
+          </div>
         </div>
 
-        <!-- Users -->
+        <!-- Regular Users -->
         <div class="panel">
-            <div class="panel-header">
-                <h2><i class="mdi mdi-account-key"></i> Users</h2>
-            </div>
-            <div class="panel-body">
-                <div th:if="${#lists.isEmpty(regularUsers)}" class="empty-state">
-                    <i class="mdi mdi-account-off"></i>
-                    <p>No users found</p>
-                </div>
-                <div th:if="${!#lists.isEmpty(regularUsers)}" class="data-table">
-                    <div th:each="user : ${regularUsers}" class="table-row">
-                        <div class="row-content">
-                            <div class="row-main">
-                                <span class="username" th:text="${user.username}">username</span>
-                            </div>
-                            <div class="row-meta">
-                                <span th:if="${user.lastLogin}">
-                                    <i class="mdi mdi-clock-outline"></i>
-                                    <span th:text="${#temporals.format(user.lastLogin, 'MMM dd, HH:mm')}">Last login</span>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="row-action">
-                            <form th:action="@{/admin/users/{id}/revoke(id=${user.id})}"
-                                  method="post"
-                                  onsubmit="return confirm('Revoke credentials for ' + this.getAttribute('data-username') + '?');"
-                                  th:attr="data-username=${user.username}">
-                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                <button type="submit" class="btn-action btn-danger">
-                                    <i class="mdi mdi-key-remove"></i>
-                                    Revoke
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          <div class="panel-hdr">API Users</div>
+          <div class="panel-body" style="padding:0">
+            <div th:if="${#lists.isEmpty(regularUsers)}"
+                 style="padding:32px;text-align:center;color:var(--tx-3);font-size:13px">No users found</div>
+            <table class="data-tbl" th:unless="${#lists.isEmpty(regularUsers)}">
+              <thead>
+                <tr>
+                  <th>Username</th>
+                  <th>Last Login</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="user : ${regularUsers}">
+                  <td th:text="${user.username}"></td>
+                  <td class="ts"
+                      th:text="${user.lastLogin != null ? #temporals.format(user.lastLogin,'MMM dd, HH:mm') : '—'}"></td>
+                  <td>
+                    <form th:action="@{/admin/users/{id}/revoke(id=${user.id})}"
+                          method="post"
+                          th:attr="data-u=${user.username}"
+                          onsubmit="return confirm('Revoke credentials for ' + this.dataset.u + '?')">
+                      <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                      <button type="submit" class="btn-revoke"><i class="mdi mdi-key-remove"></i> Revoke</button>
+                    </form>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <!-- Garage Door State Changes -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2><i class="mdi mdi-state-machine"></i> Door State Changes</h2>
-            </div>
-            <div class="panel-body">
-                <div th:if="${#lists.isEmpty(garageDoorStateLogs)}" class="empty-state">
-                    <i class="mdi mdi-history"></i>
-                    <p>No state changes</p>
-                </div>
-                <div th:if="${!#lists.isEmpty(garageDoorStateLogs)}" class="data-table">
-                    <div th:each="log : ${garageDoorStateLogs}" class="table-row state-log">
-                        <div class="row-content">
-                            <div class="row-main">
-                                <span class="state-transition">
-                                    <span class="state-badge" th:text="${log.oldState}">OLD_STATE</span>
-                                    <i class="mdi mdi-arrow-right"></i>
-                                    <span class="state-badge" th:text="${log.newState}">NEW_STATE</span>
-                                </span>
-                            </div>
-                            <div class="row-meta">
-                                <span th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy · HH:mm:ss')}">Jan 01, 2024 · 12:00:00</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Garage Logs -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2><i class="mdi mdi-garage-variant"></i> Garage Access</h2>
-            </div>
-            <div class="panel-body">
-                <div th:if="${#lists.isEmpty(garageLogs)}" class="empty-state">
-                    <i class="mdi mdi-history"></i>
-                    <p>No access logs</p>
-                </div>
-                <div th:if="${!#lists.isEmpty(garageLogs)}" class="data-table">
-                    <div th:each="log : ${garageLogs}"
-                         class="table-row garage-log"
-                         th:attr="data-status=${log.success ? 'success' : 'failed'}">
-                        <div class="row-content">
-                            <div class="row-main">
-                                <span class="username" th:text="${log.username}">username</span>
-                            </div>
-                            <div class="row-meta">
-                                <span th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy · HH:mm:ss')}">Jan 01, 2024 · 12:00:00</span>
-                                <span class="badge"
-                                      th:classappend="${log.success ? 'badge-success' : 'badge-error'}"
-                                      th:text="${log.success ? 'Success' : 'Failed'}">
-                                    Status
-                                </span>
-                            </div>
-                            <div th:if="${!log.success && log.errorMessage}"
-                                 class="row-error"
-                                 th:text="${log.errorMessage}">
-                                Error message
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Plug Logs -->
-        <div class="panel">
-            <div class="panel-header">
-                <h2><i class="mdi mdi-power-plug"></i> Smart Plug Activity</h2>
-            </div>
-            <div class="panel-body">
-                <div th:if="${#lists.isEmpty(plugLogs)}" class="empty-state">
-                    <i class="mdi mdi-power-plug-off"></i>
-                    <p>No plug activity</p>
-                </div>
-                <div th:if="${!#lists.isEmpty(plugLogs)}" class="data-table">
-                    <div th:each="log : ${plugLogs}"
-                         class="table-row plug-log"
-                         th:attr="data-status=${log.success ? 'success' : 'failed'}">
-                        <div class="row-content">
-                            <div class="row-main">
-                                <span class="username" th:text="${log.username}">username</span>
-                            </div>
-                            <div class="row-meta">
-                                <span th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy · HH:mm:ss')}">Jan 01, 2024 · 12:00:00</span>
-                                <div class="badge-group">
-                                    <span class="badge"
-                                          th:classappend="${log.action == 'ON' ? 'badge-on' : 'badge-off'}"
-                                          th:text="${log.action}">
-                                        ON
-                                    </span>
-                                    <span class="badge"
-                                          th:classappend="${log.success ? 'badge-success' : 'badge-error'}"
-                                          th:text="${log.success ? 'Success' : 'Failed'}">
-                                        Status
-                                    </span>
-                                </div>
-                            </div>
-                            <div th:if="${!log.success && log.errorMessage}"
-                                 class="row-error"
-                                 th:text="${log.errorMessage}">
-                                Error message
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  TAB: Schedule                                      -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-sched">
+
+      <div class="sched-grid">
+        <!-- Weekday -->
+        <div class="sched-card">
+          <div class="sched-top">
+            <span class="sched-name"><i class="mdi mdi-calendar-week"></i> Weekday (Mon–Fri)</span>
+            <button class="tog-btn off" id="tog-weekday" onclick="toggleSched('weekday')">Disabled</button>
+          </div>
+          <div class="sched-times">
+            <div class="sched-fld">
+              <label>Turn OFF</label>
+              <input type="time" id="wd-off" value="00:00">
+            </div>
+            <div class="sched-fld">
+              <label>Turn ON</label>
+              <input type="time" id="wd-on" value="06:00">
+            </div>
+          </div>
+          <button class="btn-save" onclick="saveSched('weekday')">Save</button>
+        </div>
+
+        <!-- Weekend -->
+        <div class="sched-card">
+          <div class="sched-top">
+            <span class="sched-name"><i class="mdi mdi-calendar-weekend"></i> Weekend (Sat–Sun)</span>
+            <button class="tog-btn off" id="tog-weekend" onclick="toggleSched('weekend')">Disabled</button>
+          </div>
+          <div class="sched-times">
+            <div class="sched-fld">
+              <label>Turn OFF</label>
+              <input type="time" id="we-off" value="00:00">
+            </div>
+            <div class="sched-fld">
+              <label>Turn ON</label>
+              <input type="time" id="we-on" value="07:00">
+            </div>
+          </div>
+          <button class="btn-save" onclick="saveSched('weekend')">Save</button>
+        </div>
+      </div>
+
+      <!-- Exceptions -->
+      <div class="exc-panel">
+        <div class="exc-top">
+          <span class="exc-title">Exceptions</span>
+          <button class="btn-add-exc" onclick="toggleExcForm()">
+            <i class="mdi mdi-plus"></i> Add Exception
+          </button>
+        </div>
+
+        <div class="exc-form-wrap" id="exc-form-wrap">
+          <div class="exc-form-row date-row-single" id="exc-single-row">
+            <div class="exc-fld">
+              <label>Date</label>
+              <input type="date" id="exc-date">
+            </div>
+            <div class="exc-fld">
+              <label>Turn OFF</label>
+              <input type="time" id="exc-off" value="00:00">
+            </div>
+            <div class="exc-fld">
+              <label>Turn ON</label>
+              <input type="time" id="exc-on" value="06:00">
+            </div>
+          </div>
+          <div class="exc-form-row date-row-multi" id="exc-multi-row" style="display:none">
+            <div class="exc-fld">
+              <label>Start Date</label>
+              <input type="date" id="exc-start">
+            </div>
+            <div class="exc-fld">
+              <label>End Date</label>
+              <input type="date" id="exc-end">
+            </div>
+            <div class="exc-fld">
+              <label>Turn OFF</label>
+              <input type="time" id="exc-off-m" value="00:00">
+            </div>
+            <div class="exc-fld">
+              <label>Turn ON</label>
+              <input type="time" id="exc-on-m" value="06:00">
+            </div>
+          </div>
+          <div class="exc-fld" style="margin-bottom:10px">
+            <label>Description (optional)</label>
+            <input type="text" id="exc-desc" placeholder="e.g. Holiday">
+          </div>
+          <div class="exc-form-actions">
+            <label>
+              <input type="checkbox" id="exc-multi" onchange="toggleExcMulti()">
+              Multiple dates
+            </label>
+            <button class="btn-exc-save" onclick="saveExc()">
+              <span id="exc-btn-txt">Create Exception</span>
+            </button>
+            <button class="btn-logout" style="margin-left:4px" onclick="toggleExcForm()">Cancel</button>
+          </div>
+        </div>
+
+        <div class="exc-list" id="exc-list">
+          <div class="exc-empty">No exceptions</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script th:inline="javascript">
-    /*<![CDATA[*/
-    const csrfToken = /*[[${_csrf.token}]]*/ '';
-    const csrfHeader = /*[[${_csrf.headerName}]]*/ '';
+/*<![CDATA[*/
+const csrf = { token: /*[[${_csrf.token}]]*/ '', header: /*[[${_csrf.headerName}]]*/ '' };
 
-    let weekdayEnabled = true;
-    let weekendEnabled = true;
+/* ── Theme ───────────────────────────────────────────────── */
+(function () {
+  const t = localStorage.getItem('theme') || 'purple';
+  document.documentElement.dataset.theme = t;
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.t === t));
+})();
 
-    // Toggle schedule section
-    function toggleSchedule() {
-        const content = document.getElementById('scheduleContent');
-        const toggle = document.getElementById('scheduleToggle');
-        content.classList.toggle('open');
-        toggle.classList.toggle('open');
+function setTheme(t) {
+  document.documentElement.dataset.theme = t;
+  localStorage.setItem('theme', t);
+  document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.t === t));
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+  localStorage.setItem('tab', name);
+}
+
+(function () {
+  const saved = localStorage.getItem('tab');
+  if (saved) {
+    const btn = document.querySelector(`.tab-btn[data-tab="${saved}"]`);
+    if (btn) switchTab(saved, btn);
+  }
+})();
+
+/* ── Pagination ──────────────────────────────────────────── */
+const _pags = {};
+
+class Pag {
+  constructor(tableId, navId, infoId, pageSize = 25) {
+    this.tbody = document.querySelector('#' + tableId + ' tbody');
+    this.allRows = [...this.tbody.querySelectorAll('tr')];
+    this.rows = this.allRows;
+    this.navId = navId;
+    this.infoId = infoId;
+    this.pageSize = pageSize;
+    this.cur = 1;
+    _pags[navId] = this;
+    this._render();
+  }
+
+  filter(fn) { this.rows = this.allRows.filter(fn); this.cur = 1; this._render(); }
+  reset()    { this.rows = this.allRows;               this.cur = 1; this._render(); }
+  go(p)      { this.cur = Math.max(1, Math.min(p, this._pages())); this._render(); }
+
+  _pages() { return Math.max(1, Math.ceil(this.rows.length / this.pageSize)); }
+
+  _render() {
+    const s = (this.cur - 1) * this.pageSize, e = s + this.pageSize;
+    this.allRows.forEach(r => r.style.display = 'none');
+    this.rows.forEach((r, i) => { r.style.display = (i >= s && i < e) ? '' : 'none'; });
+
+    const info = document.getElementById(this.infoId);
+    if (info) {
+      if (this.rows.length === 0) { info.textContent = '0 records'; }
+      else { info.textContent = (s + 1) + '–' + Math.min(e, this.rows.length) + ' of ' + this.rows.length; }
     }
 
-    // Load schedules on page load
-    document.addEventListener('DOMContentLoaded', () => {
-        loadSchedules();
-        loadExceptions();
+    const nav = document.getElementById(this.navId);
+    if (nav) nav.innerHTML = this._navHTML();
+  }
+
+  _navHTML() {
+    const p = this.pages = this._pages();
+    if (p <= 1) return '';
+    const dis = v => v ? '' : ' disabled';
+    let h = `<button class="pg prev"${dis(this.cur > 1)} onclick="_pags['${this.navId}'].go(${this.cur - 1})">&#8249;</button>`;
+    const show = new Set([1, p, this.cur, this.cur - 1, this.cur + 1].filter(x => x >= 1 && x <= p));
+    let prev = 0;
+    for (const pg of [...show].sort((a, b) => a - b)) {
+      if (prev && pg - prev > 1) h += `<span class="pg-dot">&hellip;</span>`;
+      h += `<button class="pg${pg === this.cur ? ' cur' : ''}" onclick="_pags['${this.navId}'].go(${pg})">${pg}</button>`;
+      prev = pg;
+    }
+    h += `<button class="pg next"${dis(this.cur < p)} onclick="_pags['${this.navId}'].go(${this.cur + 1})">&#8250;</button>`;
+    return h;
+  }
+}
+
+/* ── Door states filter ──────────────────────────────────── */
+function filterDoor(f, btn) {
+  document.querySelectorAll('#door-filters .f-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const pag = _pags['pg-door'];
+  if (!pag) return;
+  if (f === 'all') { pag.reset(); return; }
+  pag.filter(r => {
+    const s = r.dataset.state || '';
+    if (f === 'closed') return s === 'IDLE_CLOSED';
+    if (f === 'open')   return s === 'IDLE_OPEN';
+    if (f === 'moving') return ['OPENING','CLOSING','STOPPED_PARTIAL','IDLE_WITH_LIGHT'].includes(s);
+    if (f === 'stuck')  return s.includes('STUCK');
+    return true;
+  });
+}
+
+/* ── Schedule ────────────────────────────────────────────── */
+let _schedEnabled = { weekday: false, weekend: false };
+
+async function loadSchedules() {
+  for (const day of ['weekday', 'weekend']) {
+    try {
+      const r = await fetch(`/admin/schedule/${day}`, { headers: { [csrf.header]: csrf.token } });
+      const d = await r.json();
+      const pre = day === 'weekday' ? 'wd' : 'we';
+      document.getElementById(pre + '-off').value = d.offTime;
+      document.getElementById(pre + '-on').value  = d.onTime;
+      _schedEnabled[day] = d.enabled;
+      _setTogBtn(day, d.enabled);
+    } catch (e) { console.error('load sched', day, e); }
+  }
+}
+
+async function loadExceptions() {
+  try {
+    const r = await fetch('/admin/schedule/exceptions', { headers: { [csrf.header]: csrf.token } });
+    renderExceptions(await r.json());
+  } catch (e) { console.error('load exc', e); }
+}
+
+function renderExceptions(list) {
+  const el = document.getElementById('exc-list');
+  if (!list.length) { el.innerHTML = '<div class="exc-empty">No exceptions</div>'; return; }
+  el.innerHTML = list.map(ex => `
+    <div class="exc-item">
+      <div class="exc-info">
+        <div class="exc-date">${_fmtDate(ex.exceptionDate)}</div>
+        <div class="exc-times">OFF ${ex.offTime} &bull; ON ${ex.onTime}</div>
+        ${ex.description ? `<div class="exc-desc">${ex.description}</div>` : ''}
+      </div>
+      <button class="btn-del" onclick="delExc(${ex.id})"><i class="mdi mdi-delete"></i></button>
+    </div>`).join('');
+}
+
+function _fmtDate(s) {
+  return new Date(s).toLocaleDateString('en-US', { weekday:'short', year:'numeric', month:'short', day:'numeric' });
+}
+
+async function saveSched(day) {
+  const pre = day === 'weekday' ? 'wd' : 'we';
+  const off = document.getElementById(pre + '-off').value;
+  const on  = document.getElementById(pre + '-on').value;
+  try {
+    const r = await fetch(`/admin/schedule/${day}?onTime=${on}&offTime=${off}`, {
+      method: 'POST', headers: { [csrf.header]: csrf.token }
     });
+    const d = await r.json();
+    showToast(d.success ? (day === 'weekday' ? 'Weekday' : 'Weekend') + ' schedule saved' : d.message, d.success ? 'ok' : 'err');
+  } catch (e) { showToast('Failed to save', 'err'); }
+}
 
-    async function loadSchedules() {
-        try {
-            // Load weekday schedule
-            const weekdayRes = await fetch('/admin/schedule/weekday', {
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const weekday = await weekdayRes.json();
-            document.getElementById('weekdayOffTime').value = weekday.offTime;
-            document.getElementById('weekdayOnTime').value = weekday.onTime;
-            weekdayEnabled = weekday.enabled;
-            updateToggleButton('weekdayToggle', weekdayEnabled);
+async function toggleSched(day) {
+  _schedEnabled[day] = !_schedEnabled[day];
+  try {
+    const r = await fetch(`/admin/schedule/toggle/${day}?enabled=${_schedEnabled[day]}`, {
+      method: 'POST', headers: { [csrf.header]: csrf.token }
+    });
+    const d = await r.json();
+    if (d.success) { _setTogBtn(day, _schedEnabled[day]); showToast(d.message, 'ok'); }
+    else { _schedEnabled[day] = !_schedEnabled[day]; showToast(d.message, 'err'); }
+  } catch (e) { _schedEnabled[day] = !_schedEnabled[day]; showToast('Failed', 'err'); }
+}
 
-            // Load weekend schedule
-            const weekendRes = await fetch('/admin/schedule/weekend', {
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const weekend = await weekendRes.json();
-            document.getElementById('weekendOffTime').value = weekend.offTime;
-            document.getElementById('weekendOnTime').value = weekend.onTime;
-            weekendEnabled = weekend.enabled;
-            updateToggleButton('weekendToggle', weekendEnabled);
-        } catch (error) {
-            console.error('Failed to load schedules:', error);
-        }
+function _setTogBtn(day, enabled) {
+  const btn = document.getElementById('tog-' + day);
+  btn.className = 'tog-btn ' + (enabled ? 'on' : 'off');
+  btn.textContent = enabled ? 'Enabled' : 'Disabled';
+}
+
+function toggleExcForm() {
+  const w = document.getElementById('exc-form-wrap');
+  w.classList.toggle('open');
+  if (w.classList.contains('open')) {
+    const today = new Date().toISOString().split('T')[0];
+    ['exc-date','exc-start','exc-end'].forEach(id => {
+      const el = document.getElementById(id); if (el) el.min = today;
+    });
+    document.getElementById('exc-multi').checked = false;
+    toggleExcMulti();
+  }
+}
+
+function toggleExcMulti() {
+  const multi = document.getElementById('exc-multi').checked;
+  document.getElementById('exc-single-row').style.display = multi ? 'none' : '';
+  document.getElementById('exc-multi-row').style.display  = multi ? ''     : 'none';
+  document.getElementById('exc-btn-txt').textContent = multi ? 'Create Exceptions' : 'Create Exception';
+}
+
+async function saveExc() {
+  const multi = document.getElementById('exc-multi').checked;
+  const desc  = document.getElementById('exc-desc').value;
+  const encDesc = desc ? `&description=${encodeURIComponent(desc)}` : '';
+
+  if (multi) {
+    const start = document.getElementById('exc-start').value;
+    const end   = document.getElementById('exc-end').value;
+    const off   = document.getElementById('exc-off-m').value;
+    const on    = document.getElementById('exc-on-m').value;
+    if (!start || !end) { showToast('Select start and end dates', 'err'); return; }
+    const s = new Date(start), e = new Date(end);
+    if (s > e) { showToast('Start must be before end', 'err'); return; }
+    const days = Math.ceil((e - s) / 86400000) + 1;
+    if (days > 90) { showToast('Max 90 days', 'err'); return; }
+    if (!confirm(`Create ${days} exceptions?`)) return;
+    let ok = 0, fail = 0;
+    const cur = new Date(s);
+    while (cur <= e) {
+      const d = cur.toISOString().split('T')[0];
+      const bd = desc || `Batch ${d}`;
+      try {
+        const r = await fetch(`/admin/schedule/exception?date=${d}&onTime=${on}&offTime=${off}&description=${encodeURIComponent(bd)}`, {
+          method: 'POST', headers: { [csrf.header]: csrf.token }
+        });
+        (await r.json()).success ? ok++ : fail++;
+      } catch { fail++; }
+      cur.setDate(cur.getDate() + 1);
     }
+    if (ok) { showToast(`Created ${ok} exceptions${fail ? ', ' + fail + ' failed' : ''}`, 'ok'); toggleExcForm(); loadExceptions(); }
+    else showToast('Failed to create exceptions', 'err');
+  } else {
+    const date = document.getElementById('exc-date').value;
+    const off  = document.getElementById('exc-off').value;
+    const on   = document.getElementById('exc-on').value;
+    if (!date) { showToast('Select a date', 'err'); return; }
+    try {
+      const r = await fetch(`/admin/schedule/exception?date=${date}&onTime=${on}&offTime=${off}${encDesc}`, {
+        method: 'POST', headers: { [csrf.header]: csrf.token }
+      });
+      const d = await r.json();
+      if (d.success) { showToast('Exception created', 'ok'); toggleExcForm(); loadExceptions(); }
+      else showToast(d.message, 'err');
+    } catch { showToast('Failed', 'err'); }
+  }
+}
 
-    async function loadExceptions() {
-        try {
-            const res = await fetch('/admin/schedule/exceptions', {
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const exceptions = await res.json();
-            renderExceptions(exceptions);
-        } catch (error) {
-            console.error('Failed to load exceptions:', error);
-        }
-    }
+async function delExc(id) {
+  if (!confirm('Delete this exception?')) return;
+  try {
+    const r = await fetch(`/admin/schedule/exception/${id}`, {
+      method: 'DELETE', headers: { [csrf.header]: csrf.token }
+    });
+    const d = await r.json();
+    if (d.success) { showToast('Exception deleted', 'ok'); loadExceptions(); }
+    else showToast(d.message, 'err');
+  } catch { showToast('Failed', 'err'); }
+}
 
-    function renderExceptions(exceptions) {
-        const list = document.getElementById('exceptionList');
-        if (exceptions.length === 0) {
-            list.innerHTML = '<div class="empty-exceptions">No schedule exceptions</div>';
-            return;
-        }
+/* ── Toast ───────────────────────────────────────────────── */
+let _toastTimer;
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast' + (type === 'err' ? ' toast-err' : '');
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(_toastTimer);
+  _toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+}
 
-        list.innerHTML = exceptions.map(ex => `
-            <div class="exception-item">
-                <div class="exception-info">
-                    <div class="exception-date">${formatDate(ex.exceptionDate)}</div>
-                    <div class="exception-times">OFF: ${ex.offTime} | ON: ${ex.onTime}</div>
-                    ${ex.description ? `<div class="exception-desc">${ex.description}</div>` : ''}
-                </div>
-                <button class="btn-delete-exception" onclick="deleteException(${ex.id})">
-                    <i class="mdi mdi-delete"></i>
-                    Delete
-                </button>
-            </div>
-        `).join('');
-    }
-
-    function formatDate(dateStr) {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
-    }
-
-    async function saveWeekdaySchedule() {
-        const offTime = document.getElementById('weekdayOffTime').value;
-        const onTime = document.getElementById('weekdayOnTime').value;
-
-        try {
-            const res = await fetch(`/admin/schedule/weekday?onTime=${onTime}&offTime=${offTime}`, {
-                method: 'POST',
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('Weekday schedule updated', 'success');
-            } else {
-                showToast(data.message, 'error');
-            }
-        } catch (error) {
-            showToast('Failed to update weekday schedule', 'error');
-        }
-    }
-
-    async function saveWeekendSchedule() {
-        const offTime = document.getElementById('weekendOffTime').value;
-        const onTime = document.getElementById('weekendOnTime').value;
-
-        try {
-            const res = await fetch(`/admin/schedule/weekend?onTime=${onTime}&offTime=${offTime}`, {
-                method: 'POST',
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const data = await res.json();
-            if (data.success) {
-                showToast('Weekend schedule updated', 'success');
-            } else {
-                showToast(data.message, 'error');
-            }
-        } catch (error) {
-            showToast('Failed to update weekend schedule', 'error');
-        }
-    }
-
-    async function toggleWeekdaySchedule() {
-        weekdayEnabled = !weekdayEnabled;
-        try {
-            const res = await fetch(`/admin/schedule/toggle/weekday?enabled=${weekdayEnabled}`, {
-                method: 'POST',
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const data = await res.json();
-            if (data.success) {
-                updateToggleButton('weekdayToggle', weekdayEnabled);
-                showToast(data.message, 'success');
-            }
-        } catch (error) {
-            showToast('Failed to toggle weekday schedule', 'error');
-        }
-    }
-
-    async function toggleWeekendSchedule() {
-        weekendEnabled = !weekendEnabled;
-        try {
-            const res = await fetch(`/admin/schedule/toggle/weekend?enabled=${weekendEnabled}`, {
-                method: 'POST',
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const data = await res.json();
-            if (data.success) {
-                updateToggleButton('weekendToggle', weekendEnabled);
-                showToast(data.message, 'success');
-            }
-        } catch (error) {
-            showToast('Failed to toggle weekend schedule', 'error');
-        }
-    }
-
-    function updateToggleButton(id, enabled) {
-        const btn = document.getElementById(id);
-        if (enabled) {
-            btn.classList.add('enabled');
-            btn.innerHTML = '<i class="mdi mdi-power"></i> Enabled';
-        } else {
-            btn.classList.remove('enabled');
-            btn.innerHTML = '<i class="mdi mdi-power-off"></i> Disabled';
-        }
-    }
-
-    function toggleExceptionForm() {
-        const form = document.getElementById('exceptionForm');
-        form.classList.toggle('show');
-        if (form.classList.contains('show')) {
-            // Set min date to today
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('exceptionDate').min = today;
-            document.getElementById('exceptionStartDate').min = today;
-            document.getElementById('exceptionEndDate').min = today;
-
-            // Reset multi-date mode
-            document.getElementById('multiDateMode').checked = false;
-            toggleMultiDateMode();
-        }
-    }
-
-    function toggleMultiDateMode() {
-        const isMulti = document.getElementById('multiDateMode').checked;
-        document.getElementById('singleDateContainer').style.display = isMulti ? 'none' : 'block';
-        document.getElementById('multiDateContainer').style.display = isMulti ? 'grid' : 'none';
-        document.getElementById('createButtonText').textContent = isMulti ? 'Create Exceptions' : 'Create Exception';
-    }
-
-    async function saveException() {
-        const isMultiDate = document.getElementById('multiDateMode').checked;
-        const offTime = document.getElementById('exceptionOffTime').value;
-        const onTime = document.getElementById('exceptionOnTime').value;
-        const description = document.getElementById('exceptionDesc').value;
-
-        if (isMultiDate) {
-            // Multi-date mode
-            const startDate = document.getElementById('exceptionStartDate').value;
-            const endDate = document.getElementById('exceptionEndDate').value;
-
-            if (!startDate || !endDate) {
-                showToast('Please select start and end dates', 'error');
-                return;
-            }
-
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-
-            if (start > end) {
-                showToast('Start date must be before end date', 'error');
-                return;
-            }
-
-            // Calculate number of days
-            const daysDiff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
-
-            if (daysDiff > 90) {
-                showToast('Maximum 90 days allowed at once', 'error');
-                return;
-            }
-
-            if (!confirm(`Create ${daysDiff} exceptions from ${startDate} to ${endDate}?`)) {
-                return;
-            }
-
-            // Create exceptions for each date in range
-            let successCount = 0;
-            let failCount = 0;
-            const currentDate = new Date(start);
-
-            showToast(`Creating ${daysDiff} exceptions...`, 'info');
-
-            while (currentDate <= end) {
-                const dateStr = currentDate.toISOString().split('T')[0];
-                const desc = description || `Batch exception ${dateStr}`;
-
-                try {
-                    const url = `/admin/schedule/exception?date=${dateStr}&onTime=${onTime}&offTime=${offTime}&description=${encodeURIComponent(desc)}`;
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: { [csrfHeader]: csrfToken }
-                    });
-                    const data = await res.json();
-
-                    if (data.success) {
-                        successCount++;
-                    } else {
-                        failCount++;
-                        console.error(`Failed to create exception for ${dateStr}:`, data.message);
-                    }
-                } catch (error) {
-                    failCount++;
-                    console.error(`Error creating exception for ${dateStr}:`, error);
-                }
-
-                currentDate.setDate(currentDate.getDate() + 1);
-            }
-
-            if (successCount > 0) {
-                showToast(`Created ${successCount} exceptions successfully${failCount > 0 ? `, ${failCount} failed` : ''}`, 'success');
-                toggleExceptionForm();
-                loadExceptions();
-                resetExceptionForm();
-            } else {
-                showToast('Failed to create exceptions', 'error');
-            }
-
-        } else {
-            // Single date mode
-            const date = document.getElementById('exceptionDate').value;
-
-            if (!date) {
-                showToast('Please select a date', 'error');
-                return;
-            }
-
-            try {
-                const url = `/admin/schedule/exception?date=${date}&onTime=${onTime}&offTime=${offTime}` +
-                            (description ? `&description=${encodeURIComponent(description)}` : '');
-
-                const res = await fetch(url, {
-                    method: 'POST',
-                    headers: { [csrfHeader]: csrfToken }
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    showToast('Exception created', 'success');
-                    toggleExceptionForm();
-                    loadExceptions();
-                    resetExceptionForm();
-                } else {
-                    showToast(data.message, 'error');
-                }
-            } catch (error) {
-                showToast('Failed to create exception', 'error');
-            }
-        }
-    }
-
-    function resetExceptionForm() {
-        document.getElementById('exceptionDate').value = '';
-        document.getElementById('exceptionStartDate').value = '';
-        document.getElementById('exceptionEndDate').value = '';
-        document.getElementById('exceptionOffTime').value = '00:00';
-        document.getElementById('exceptionOnTime').value = '06:00';
-        document.getElementById('exceptionDesc').value = '';
-        document.getElementById('multiDateMode').checked = false;
-        toggleMultiDateMode();
-    }
-
-    async function deleteException(id) {
-        if (!confirm('Delete this exception?')) return;
-
-        try {
-            const res = await fetch(`/admin/schedule/exception/${id}`, {
-                method: 'DELETE',
-                headers: { [csrfHeader]: csrfToken }
-            });
-            const data = await res.json();
-
-            if (data.success) {
-                showToast('Exception deleted', 'success');
-                loadExceptions();
-            } else {
-                showToast(data.message, 'error');
-            }
-        } catch (error) {
-            showToast('Failed to delete exception', 'error');
-        }
-    }
-
-    function showToast(message, type) {
-        // Simple toast notification - you can enhance this
-        const alertClass = type === 'success' ? 'alert-success' : type === 'info' ? 'alert alert-info' : 'alert-error';
-        const icon = type === 'success' ? 'mdi-check-circle' : type === 'info' ? 'mdi-information' : 'mdi-alert-circle';
-
-        const toast = document.createElement('div');
-        toast.className = `alert ${alertClass}`;
-        toast.style.cssText = 'position: fixed; top: 80px; right: 16px; z-index: 9999; animation: slideIn 0.3s ease;';
-        toast.innerHTML = `
-            <i class="mdi ${icon}"></i>
-            <span>${message}</span>
-        `;
-
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    /*]]>*/
+/* ── Init ────────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  new Pag('tbl-door',   'pg-door',   'info-door');
+  new Pag('tbl-access', 'pg-access', 'info-access');
+  new Pag('tbl-plug',   'pg-plug',   'info-plug');
+  loadSchedules();
+  loadExceptions();
+});
+/*]]>*/
 </script>
 </body>
 </html>

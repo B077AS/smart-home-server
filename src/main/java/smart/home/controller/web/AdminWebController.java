@@ -117,30 +117,29 @@ public class AdminWebController {
         model.addAttribute("superAdmin", superAdmin);
         model.addAttribute("regularUsers", regularUsers);
 
-        List<GarageLog> garageLogs = garageLogRepository.findTop50ByOrderByTimestampDesc();
+        List<GarageLog> garageLogs = garageLogRepository.findTop500ByOrderByTimestampDesc();
         model.addAttribute("garageLogs", garageLogs);
 
-        List<PlugLog> plugLogs = plugLogRepository.findTop50ByOrderByTimestampDesc();
+        List<PlugLog> plugLogs = plugLogRepository.findTop500ByOrderByTimestampDesc();
         model.addAttribute("plugLogs", plugLogs);
 
-        List<GarageDoorStateLog> garageDoorStateLogs = garageDoorStateLogRepository.findTop50ByOrderByTimestampDesc();
+        List<GarageDoorStateLog> garageDoorStateLogs = garageDoorStateLogRepository.findTop500ByOrderByTimestampDesc();
         model.addAttribute("garageDoorStateLogs", garageDoorStateLogs);
 
-        long totalUsers = regularUsers.size(); // Don't count super admin
-        long totalGarageAccess = garageLogRepository.count();
-        long totalPlugActivity = plugLogRepository.count();
-
+        long totalUsers = regularUsers.size();
         LocalDateTime last24Hours = LocalDateTime.now().minusHours(24);
         long garageAccess24h = garageLogRepository.countByTimestampAfter(last24Hours);
         long plugActivity24h = plugLogRepository.countByTimestampAfter(last24Hours);
         long garageDoorStateChanges24h = garageDoorStateLogRepository.countByTimestampAfter(last24Hours);
+        long idleClosedCount = garageDoorStateLogRepository.countByNewState("IDLE_CLOSED");
+        long idleOpenCount = garageDoorStateLogRepository.countByNewState("IDLE_OPEN");
 
         model.addAttribute("totalUsers", totalUsers);
-        model.addAttribute("totalGarageAccess", totalGarageAccess);
         model.addAttribute("garageAccess24h", garageAccess24h);
-        model.addAttribute("totalPlugActivity", totalPlugActivity);
         model.addAttribute("plugActivity24h", plugActivity24h);
         model.addAttribute("garageDoorStateChanges24h", garageDoorStateChanges24h);
+        model.addAttribute("idleClosedCount", idleClosedCount);
+        model.addAttribute("idleOpenCount", idleOpenCount);
 
         return "admin-dashboard";
     }

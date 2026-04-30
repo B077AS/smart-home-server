@@ -18,5 +18,7 @@ public interface GarageLogRepository extends JpaRepository<GarageLog, Long> {
 
     List<GarageLog> findTop50ByOrderByTimestampDesc();
 
+    List<GarageLog> findTop500ByOrderByTimestampDesc();
+
     long countByTimestampAfter(LocalDateTime timestamp);
 }

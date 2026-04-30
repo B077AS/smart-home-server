@@ -19,5 +19,9 @@ public interface GarageDoorStateLogRepository extends JpaRepository<GarageDoorSt
 
     List<GarageDoorStateLog> findTop50ByOrderByTimestampDesc();
 
+    List<GarageDoorStateLog> findTop500ByOrderByTimestampDesc();
+
     long countByTimestampAfter(LocalDateTime timestamp);
+
+    long countByNewState(String newState);
 }

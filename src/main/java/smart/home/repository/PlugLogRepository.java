@@ -20,5 +20,7 @@ public interface PlugLogRepository extends JpaRepository<PlugLog, Long> {
 
     List<PlugLog> findTop50ByOrderByTimestampDesc();
 
+    List<PlugLog> findTop500ByOrderByTimestampDesc();
+
     long countByTimestampAfter(LocalDateTime timestamp);
 }
