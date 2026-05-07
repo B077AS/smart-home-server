@@ -1,6 +1,6 @@
 package smart.home.controller.api;
 
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ import smart.home.dto.MqttStatusResponse;
 @RequestMapping("/api/mqtt")
 public class MqttHealthController {
 
-    private final Mqtt3AsyncClient mqttClient;
+    private final Mqtt5AsyncClient mqttClient;
 
     @GetMapping("/status")
     public ResponseEntity<MqttStatusResponse> checkMqttStatus() {

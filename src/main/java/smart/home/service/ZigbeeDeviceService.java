@@ -2,7 +2,7 @@ package smart.home.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class ZigbeeDeviceService {
 
-    private final Mqtt3AsyncClient mqttClient;
+    private final Mqtt5AsyncClient mqttClient;
     private final Gson gson = new Gson();
     private final SimpMessagingTemplate messagingTemplate;
     private final GarageDoorStateTracker stateTracker;

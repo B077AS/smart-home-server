@@ -1,7 +1,7 @@
 package smart.home.service;
 
 import com.google.gson.JsonObject;
-import com.hivemq.client.mqtt.mqtt3.Mqtt3AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ public class GarageService {
     private final RestTemplate restTemplate;
     private final GarageLogRepository garageLogRepository;
     private final PlugLogRepository plugLogRepository;
-    private final Mqtt3AsyncClient mqttClient;
+    private final Mqtt5AsyncClient mqttClient;
 
     @Value("${garage.rfcat-service-url}")
     private String rfcatServiceUrl;
