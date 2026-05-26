@@ -241,7 +241,7 @@ public class GarageDoorStateTracker {
             // Email alert when door reaches IDLE_OPEN
             if (newState == GarageDoorState.IDLE_OPEN &&
                     appSettingsService.getBoolean(AppSettingsService.GARAGE_DOOR_OPEN_EMAIL_ENABLED, false)) {
-                emailService.sendGarageDoorOpenNotification();
+                emailService.sendGarageDoorOpenNotification(null, null);
             }
 
             // Track movement direction
