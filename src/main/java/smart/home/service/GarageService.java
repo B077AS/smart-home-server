@@ -28,6 +28,8 @@ public class GarageService {
     private final GarageLogRepository garageLogRepository;
     private final PlugLogRepository plugLogRepository;
     private final Mqtt5AsyncClient mqttClient;
+    private final EmailService emailService;
+    private final AppSettingsService appSettingsService;
 
     @Value("${garage.rfcat-service-url}")
     private String rfcatServiceUrl;
@@ -37,7 +39,7 @@ public class GarageService {
 
     private static final String PLUG_TOPIC = "zigbee2mqtt/GarageDoorPlug/set";
 
-    public String triggerGarage(String username) {
+    public String triggerGarage(String username, String ipAddress) {
         log.info("Triggering garage for user: {}", username);
 
         HttpHeaders headers = new HttpHeaders();
@@ -60,6 +62,9 @@ public class GarageService {
                     .timestamp(LocalDateTime.now())
                     .success(true)
                     .build());
+            if (appSettingsService.getBoolean(AppSettingsService.GARAGE_TRIGGER_EMAIL_ENABLED, false)) {
+                emailService.sendGarageTriggerNotification(username, ipAddress);
+            }
             return response.getBody();
         } else {
             String errorMsg = "Flask service error: " + response.getBody();

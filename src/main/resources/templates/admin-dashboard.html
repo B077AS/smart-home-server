@@ -84,6 +84,7 @@
       <button class="tab-btn"        data-tab="plug"   onclick="switchTab('plug',   this)"><i class="mdi mdi-power-plug"></i><span class="tab-lbl"> Smart Switch</span></button>
       <button class="tab-btn"        data-tab="users"  onclick="switchTab('users',  this)"><i class="mdi mdi-account-key"></i><span class="tab-lbl"> Users</span></button>
       <button class="tab-btn"        data-tab="sched"  onclick="switchTab('sched',  this)"><i class="mdi mdi-calendar-clock"></i><span class="tab-lbl"> Switch Schedule</span></button>
+      <button class="tab-btn"        data-tab="notif"  onclick="switchTab('notif',  this)"><i class="mdi mdi-bell-outline"></i><span class="tab-lbl"> Notifications</span></button>
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
@@ -391,6 +392,37 @@
       </div>
     </div>
 
+    <!-- ════════════════════════════════════════════════════ -->
+    <!--  TAB: Notifications                                 -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="tab-pane" id="tab-notif">
+
+      <div class="sched-grid">
+        <!-- Garage Trigger Email -->
+        <div class="sched-card">
+          <div class="sched-top">
+            <span class="sched-name"><i class="mdi mdi-remote"></i> Garage Trigger Email</span>
+            <button class="tog-btn off" id="tog-garage-trigger" onclick="toggleNotif('garage-trigger')">Disabled</button>
+          </div>
+          <p style="margin: 12px 0 0 0; color: var(--tx-2); font-size: 13px; line-height: 1.6;">
+            Send an email when the garage door is triggered via the app, including the username and IP address of who initiated it.
+          </p>
+        </div>
+
+        <!-- Door Open Sensor Email -->
+        <div class="sched-card">
+          <div class="sched-top">
+            <span class="sched-name"><i class="mdi mdi-garage-open-variant"></i> Door Open Sensor Email</span>
+            <button class="tog-btn off" id="tog-door-open" onclick="toggleNotif('door-open')">Disabled</button>
+          </div>
+          <p style="margin: 12px 0 0 0; color: var(--tx-2); font-size: 13px; line-height: 1.6;">
+            Send an email whenever the tilt sensor detects the door entering the open state — fires for any source, including physical remotes or manual operation.
+          </p>
+        </div>
+      </div>
+
+    </div>
+
   </main>
 </div>
 
@@ -654,6 +686,39 @@ async function delExc(id) {
   } catch { showToast('Failed', 'err'); }
 }
 
+/* ── Notifications ───────────────────────────────────────── */
+let _notifEnabled = { 'garage-trigger': false, 'door-open': false };
+
+async function loadNotifSettings() {
+  try {
+    const r = await fetch('/admin/notifications/settings', { headers: { [csrf.header]: csrf.token } });
+    const d = await r.json();
+    _notifEnabled['garage-trigger'] = d.garageTriggerEmailEnabled;
+    _notifEnabled['door-open']      = d.garageDoorOpenEmailEnabled;
+    _setNotifBtn('garage-trigger', d.garageTriggerEmailEnabled);
+    _setNotifBtn('door-open',      d.garageDoorOpenEmailEnabled);
+  } catch (e) { console.error('load notif settings', e); }
+}
+
+async function toggleNotif(key) {
+  _notifEnabled[key] = !_notifEnabled[key];
+  try {
+    const r = await fetch(`/admin/notifications/toggle/${key}?enabled=${_notifEnabled[key]}`, {
+      method: 'POST', headers: { [csrf.header]: csrf.token }
+    });
+    const d = await r.json();
+    if (d.success) { _setNotifBtn(key, _notifEnabled[key]); showToast(d.message, 'ok'); }
+    else { _notifEnabled[key] = !_notifEnabled[key]; showToast(d.message, 'err'); }
+  } catch (e) { _notifEnabled[key] = !_notifEnabled[key]; showToast('Failed', 'err'); }
+}
+
+function _setNotifBtn(key, enabled) {
+  const btn = document.getElementById('tog-' + key);
+  if (!btn) return;
+  btn.className = 'tog-btn ' + (enabled ? 'on' : 'off');
+  btn.textContent = enabled ? 'Enabled' : 'Disabled';
+}
+
 /* ── Toast ───────────────────────────────────────────────── */
 let _toastTimer;
 function showToast(msg, type) {
@@ -672,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
   new Pag('tbl-plug',   'pg-plug',   'info-plug');
   loadSchedules();
   loadExceptions();
+  loadNotifSettings();
 });
 /*]]>*/
 </script>

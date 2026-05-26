@@ -29,6 +29,64 @@ public class EmailService {
     private String notificationEmail;
 
     @Async
+    public void sendGarageTriggerNotification(String triggeredBy, String ipAddress) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(notificationEmail);
+            helper.setSubject("🚗 Garage Door Triggered — Smart Home System");
+
+            String timestamp = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm:ss"));
+
+            String htmlTemplate = loadTemplate("templates/email/garage-trigger-notification.html");
+
+            String htmlContent = htmlTemplate
+                    .replace("${triggeredBy}", triggeredBy)
+                    .replace("${timestamp}", timestamp)
+                    .replace("${ipAddress}", ipAddress);
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Garage trigger notification sent to: {}", notificationEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send garage trigger notification", e);
+        }
+    }
+
+    @Async
+    public void sendGarageDoorOpenNotification() {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+
+            helper.setFrom(fromEmail);
+            helper.setTo(notificationEmail);
+            helper.setSubject("🔓 Garage Door Open Detected — Smart Home System");
+
+            String timestamp = LocalDateTime.now()
+                    .format(DateTimeFormatter.ofPattern("MMMM dd, yyyy 'at' HH:mm:ss"));
+
+            String htmlTemplate = loadTemplate("templates/email/garage-door-open-notification.html");
+
+            String htmlContent = htmlTemplate
+                    .replace("${timestamp}", timestamp);
+
+            helper.setText(htmlContent, true);
+
+            mailSender.send(message);
+            log.info("Garage door open notification sent to: {}", notificationEmail);
+
+        } catch (Exception e) {
+            log.error("Failed to send garage door open notification", e);
+        }
+    }
+
+    @Async
     public void sendSuperAdminLoginNotification(String username, String ipAddress) {
         try {
             MimeMessage message = mailSender.createMimeMessage();

@@ -20,6 +20,8 @@ import java.util.Map;
 public class GarageDoorStateTracker {
 
     private final GarageDoorStateLogRepository stateLogRepository;
+    private final EmailService emailService;
+    private final AppSettingsService appSettingsService;
 
     // Power consumption thresholds
     private static final double POWER_IDLE = 7.5;              // ~7W idle without light
@@ -234,6 +236,12 @@ public class GarageDoorStateTracker {
                 log.debug("State change logged to database");
             } catch (Exception e) {
                 log.error("Failed to log state change to database", e);
+            }
+
+            // Email alert when door reaches IDLE_OPEN
+            if (newState == GarageDoorState.IDLE_OPEN &&
+                    appSettingsService.getBoolean(AppSettingsService.GARAGE_DOOR_OPEN_EMAIL_ENABLED, false)) {
+                emailService.sendGarageDoorOpenNotification();
             }
 
             // Track movement direction

@@ -1,5 +1,6 @@
 package smart.home.controller.api;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -38,12 +39,13 @@ public class GarageDoorController {
 
 
     @PostMapping("/trigger")
-    public ResponseEntity<?> trigger() {
+    public ResponseEntity<?> trigger(HttpServletRequest request) {
         String username = SecurityUtil.getCurrentUser().getUsername();
-        log.info("Garage trigger requested by: {}", username);
+        String ipAddress = getClientIpAddress(request);
+        log.info("Garage trigger requested by: {} from IP: {}", username, ipAddress);
 
         try {
-            String result = garageService.triggerGarage(username);
+            String result = garageService.triggerGarage(username, ipAddress);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.error("Error triggering garage", e);
@@ -116,6 +118,23 @@ public class GarageDoorController {
                             .status(500)
                             .build());
         }
+    }
+
+    private String getClientIpAddress(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("Proxy-Client-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip))
+            ip = request.getRemoteAddr();
+        if (ip != null && ip.contains(","))
+            ip = ip.split(",")[0].trim();
+        return ip != null ? ip : "UNKNOWN";
     }
 
     @GetMapping("/health")
