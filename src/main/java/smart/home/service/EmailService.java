@@ -59,7 +59,7 @@ public class EmailService {
     }
 
     @Async
-    public void sendGarageDoorOpenNotification(String triggeredBy, String ipAddress) {
+    public void sendGarageDoorOpenNotification() {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -74,9 +74,7 @@ public class EmailService {
             String htmlTemplate = loadTemplate("templates/email/garage-door-open-notification.html");
 
             String htmlContent = htmlTemplate
-                    .replace("${triggeredBy}", triggeredBy != null ? triggeredBy : "N/A")
-                    .replace("${timestamp}", timestamp)
-                    .replace("${ipAddress}", ipAddress != null ? ipAddress : "N/A");
+                    .replace("${timestamp}", timestamp);
 
             helper.setText(htmlContent, true);
 
