@@ -42,6 +42,8 @@ public class GarageDoorStateTracker {
     private static final long MOVEMENT_CONFIRMATION_WARN = 15000;     // Warn after 15s, don't fail yet
     private static final long MINIMAL_MOVEMENT_POWER_DROP_TIME = 3000; // Power must drop within 3s for 2cm stuck
 
+    private static final long PLUG_TELEMETRY_TIMEOUT = 90000;
+
     // Vibration sensor angle thresholds - NEW
     private static final int SIGNIFICANT_ANGLE_CHANGE = 30; // Degrees - significant rotation indicating movement
     private static final int ANGLE_TOLERANCE = 5;           // Degrees - tolerance for sensor noise/fluctuations
@@ -97,7 +99,8 @@ public class GarageDoorStateTracker {
     public synchronized GarageDoorStatus updateState(
             Map<String, Object> plugState,
             Map<String, Object> tiltSensorState,
-            Map<String, Object> vibrationSensorState
+            Map<String, Object> vibrationSensorState,
+            LocalDateTime plugLastSeen
     ) {
         LocalDateTime now = LocalDateTime.now();
 
@@ -219,7 +222,8 @@ public class GarageDoorStateTracker {
                 currentPower,
                 tiltOpen,
                 significantAngleChange,
-                now
+                now,
+                plugLastSeen
         );
 
         if (newState != currentState) {
@@ -272,7 +276,8 @@ public class GarageDoorStateTracker {
             Double power,
             Boolean tiltOpen,
             boolean significantAngleChange,
-            LocalDateTime now
+            LocalDateTime now,
+            LocalDateTime plugLastSeen
     ) {
         if (power == null) {
             log.debug("No power reading");
@@ -284,6 +289,25 @@ public class GarageDoorStateTracker {
                 Duration.between(operationStartTime, now).toMillis() : 0;
 
         log.debug("Timing: stateChange={}ms, operation={}ms", timeSinceStateChange, timeSinceOperation);
+
+        if ((currentState == GarageDoorState.OPENING || currentState == GarageDoorState.CLOSING)) {
+            long plugSilenceMs = plugLastSeen != null ?
+                    Duration.between(plugLastSeen, now).toMillis() : Long.MAX_VALUE;
+            if (plugSilenceMs > PLUG_TELEMETRY_TIMEOUT) {
+                log.warn("Lost plug telemetry for {}ms while {} — marking door UNKNOWN (power may have been cut upstream of the smart plug)",
+                        plugSilenceMs, currentState);
+                motorStartTime = null;
+                tiltStateAtMotorStart = null;
+                movementConfirmed = false;
+                intendedDirection = null;
+                peakPowerSinceMotorStart = null;
+                peakPowerTime = null;
+                lastHighPowerTime = null;
+                powerDropDetected = false;
+                operationStartTime = null;
+                return GarageDoorState.UNKNOWN;
+            }
+        }
 
         if (power >= POWER_MOVING_MIN && motorStartTime == null) {
             log.info("MOTOR ENGAGED: power={}W", power);

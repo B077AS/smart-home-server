@@ -2,7 +2,9 @@ package smart.home.service;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.hivemq.client.mqtt.MqttGlobalPublishFilter;
 import com.hivemq.client.mqtt.mqtt5.Mqtt5AsyncClient;
+import com.hivemq.client.mqtt.mqtt5.message.publish.Mqtt5Publish;
 import com.hivemq.client.mqtt.datatypes.MqttQos;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,7 @@ import org.springframework.context.event.EventListener;
 import smart.home.config.MqttConnectedEvent;
 
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,9 +32,8 @@ public class ZigbeeDeviceService {
     private final Gson gson = new Gson();
     private final SimpMessagingTemplate messagingTemplate;
     private final GarageDoorStateTracker stateTracker;
-
-    // Store latest state for each device
     private final Map<String, Map<String, Object>> deviceStates = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> deviceLastSeen = new ConcurrentHashMap<>();
 
     private static final String VIBRATION_SENSOR = "VibrationSensor";
     private static final String TILT_SENSOR = "TiltSensor";
@@ -39,6 +41,8 @@ public class ZigbeeDeviceService {
 
     @PostConstruct
     public void init() {
+        mqttClient.publishes(MqttGlobalPublishFilter.SUBSCRIBED, this::handleMessage);
+
         if (mqttClient.getState().isConnected()) {
             subscribeToDevices();
         }
@@ -76,40 +80,6 @@ public class ZigbeeDeviceService {
         mqttClient.subscribeWith()
                 .topicFilter(topic)
                 .qos(MqttQos.AT_LEAST_ONCE)
-                .callback(publish -> {
-                    String payload = new String(
-                            publish.getPayloadAsBytes(),
-                            StandardCharsets.UTF_8
-                    );
-
-                    Map<String, Object> data = gson.fromJson(payload, Map.class);
-
-                    // Store in cache
-                    deviceStates.put(deviceName, data);
-                    log.debug("Cached {} data: {} fields", deviceName, data.size());
-
-                    log.info("DEVICE: {}", deviceName);
-                    log.info("DATA: {}", payload);
-
-                    updateGarageDoorTracker();
-
-                    // Forward to WebSocket if available
-                    if (messagingTemplate != null) {
-                        messagingTemplate.convertAndSend(
-                                "/topic/zigbee/" + deviceName,
-                                (Object) data
-                        );
-
-                        // Also send garage door status update
-                        if (stateTracker != null) {
-                            GarageDoorStatus status = stateTracker.getCurrentStatus();
-                            messagingTemplate.convertAndSend(
-                                    "/topic/garage/status",
-                                    status
-                            );
-                        }
-                    }
-                })
                 .send()
                 .whenComplete((subAck, throwable) -> {
                     if (throwable != null) {
@@ -124,13 +94,52 @@ public class ZigbeeDeviceService {
         return future;
     }
 
+    private void handleMessage(Mqtt5Publish publish) {
+        String topic = publish.getTopic().toString();
+        String deviceName = topic.substring(topic.lastIndexOf('/') + 1);
+
+        String payload = new String(
+                publish.getPayloadAsBytes(),
+                StandardCharsets.UTF_8
+        );
+
+        Map<String, Object> data = gson.fromJson(payload, Map.class);
+
+        // Store in cache
+        deviceStates.put(deviceName, data);
+        deviceLastSeen.put(deviceName, LocalDateTime.now());
+        log.debug("Cached {} data: {} fields", deviceName, data.size());
+
+        log.info("DEVICE: {}", deviceName);
+        log.info("DATA: {}", payload);
+
+        updateGarageDoorTracker();
+
+        // Forward to WebSocket if available
+        if (messagingTemplate != null) {
+            messagingTemplate.convertAndSend(
+                    "/topic/zigbee/" + deviceName,
+                    (Object) data
+            );
+
+            // Also send garage door status update
+            if (stateTracker != null) {
+                GarageDoorStatus status = stateTracker.getCurrentStatus();
+                messagingTemplate.convertAndSend(
+                        "/topic/garage/status",
+                        status
+                );
+            }
+        }
+    }
+
     private void updateGarageDoorTracker() {
         if (stateTracker != null) {
             Map<String, Object> plugState = deviceStates.get(PLUG);
             Map<String, Object> tiltState = deviceStates.get(TILT_SENSOR);
             Map<String, Object> vibrationState = deviceStates.get(VIBRATION_SENSOR);
 
-            stateTracker.updateState(plugState, tiltState, vibrationState);
+            stateTracker.updateState(plugState, tiltState, vibrationState, deviceLastSeen.get(PLUG));
         }
     }
 
