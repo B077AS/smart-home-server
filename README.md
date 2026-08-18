@@ -1,18 +1,23 @@
-<div align="center">
+<h1 align="center">
+  <img src="src/main/resources/static/icon.svg" alt="Smart Home Server icon" width="80"><br>
+  Smart Home Server
+</h1>
 
-# 🏠 Smart Home Server
+<p align="center">
+  <b>Zigbee Device Management &amp; Garage Door Automation</b><br>
+  A Spring Boot-based smart home server for managing Zigbee devices, with a focus on garage door automation and monitoring.
+</p>
 
-**Zigbee Device Management & Garage Door Automation**
+<p align="center">
+  <img alt="Java 21" src="https://img.shields.io/badge/Java-21-orange?logo=openjdk&logoColor=white">
+  <img alt="Spring Boot 4.1.0" src="https://img.shields.io/badge/Spring%20Boot-4.1.0-brightgreen?logo=springboot&logoColor=white">
+  <img alt="MQTT" src="https://img.shields.io/badge/MQTT-HiveMQ-660066?logo=mqtt&logoColor=white">
+  <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-green?logo=opensourceinitiative&logoColor=white">
+</p>
 
-A Spring Boot-based smart home server for managing Zigbee devices, with a focus on garage door automation and monitoring.
-
-[![Java Version](https://img.shields.io/badge/Java-21-orange.svg)](https://openjdk.java.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.2-brightgreen.svg)](https://spring.io/projects/spring-boot)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-[Features](#-features) • [Tech Stack](#️-tech-stack) • [Getting Started](#-getting-started) • [Configuration](#️-configuration)
-
-</div>
+<p align="center">
+  <a href="#-features">Features</a> • <a href="#️-tech-stack">Tech Stack</a> • <a href="#-getting-started">Getting Started</a> • <a href="#️-configuration">Configuration</a>
+</p>
 
 ---
 
