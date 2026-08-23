@@ -7,9 +7,11 @@ import com.hivemq.client.mqtt.mqtt5.message.connect.connack.Mqtt5ConnAckReasonCo
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
@@ -34,6 +36,9 @@ public class MqttConfig {
 
     @Autowired
     private ApplicationEventPublisher eventPublisher;
+
+    @Autowired
+    private Mqtt5AsyncClient mqttClient;
 
     @Bean
     public Mqtt5AsyncClient mqttClient() {
@@ -79,7 +84,12 @@ public class MqttConfig {
                 })
                 .buildAsync();
 
-        client.connectWith()
+        return client;
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void connect() {
+        mqttClient.connectWith()
                 .keepAlive(60)
                 .cleanStart(true)
                 .sessionExpiryInterval(0)
@@ -89,7 +99,5 @@ public class MqttConfig {
                         log.warn("Initial MQTT connection failed, will retry automatically: {}", throwable.getMessage());
                     }
                 });
-
-        return client;
     }
 }
