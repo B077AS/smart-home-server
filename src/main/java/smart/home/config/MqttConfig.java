@@ -11,6 +11,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.event.EventListener;
 
 import java.nio.charset.StandardCharsets;
@@ -37,6 +38,7 @@ public class MqttConfig {
     @Autowired
     private ApplicationEventPublisher eventPublisher;
 
+    @Lazy
     @Autowired
     private Mqtt5AsyncClient mqttClient;
 

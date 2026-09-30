@@ -19,6 +19,7 @@ import smart.home.config.MqttConnectedEvent;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,6 +39,14 @@ public class ZigbeeDeviceService {
     private static final String VIBRATION_SENSOR = "VibrationSensor";
     private static final String TILT_SENSOR = "TiltSensor";
     private static final String PLUG = "GarageDoorPlug";
+    public static final String OFFICE_LIGHT_1 = "OfficeLight1";
+    public static final String OFFICE_LIGHT_2 = "OfficeLight2";
+
+    private static final String[] LIGHT_QUERYABLE_KEYS = {
+            "state", "color_temp", "color", "effect", "effect_speed",
+            "power_on_behavior", "dimming_range_minimum", "dimming_range_maximum",
+            "transition_curve_curvature", "transition_initial_brightness", "level_config"
+    };
 
     @PostConstruct
     public void init() {
@@ -59,9 +68,11 @@ public class ZigbeeDeviceService {
         CompletableFuture<Void> vibrationSub = subscribeToDevice(VIBRATION_SENSOR);
         CompletableFuture<Void> tiltSub = subscribeToDevice(TILT_SENSOR);
         CompletableFuture<Void> plugSub = subscribeToDevice(PLUG);
+        CompletableFuture<Void> light1Sub = subscribeToDevice(OFFICE_LIGHT_1);
+        CompletableFuture<Void> light2Sub = subscribeToDevice(OFFICE_LIGHT_2);
 
         // Wait for all subscriptions to complete, then request initial states
-        CompletableFuture.allOf(vibrationSub, tiltSub, plugSub)
+        CompletableFuture.allOf(vibrationSub, tiltSub, plugSub, light1Sub, light2Sub)
                 .thenRun(() -> {
                     log.info("Subscribed to all Zigbee devices");
 
@@ -150,6 +161,17 @@ public class ZigbeeDeviceService {
 
         // Tilt sensor: only battery can be queried
         requestTiltSensorBattery();
+
+        requestLightState(OFFICE_LIGHT_1);
+        requestLightState(OFFICE_LIGHT_2);
+    }
+
+    public void requestLightState(String deviceName) {
+        JsonObject request = new JsonObject();
+        for (String key : LIGHT_QUERYABLE_KEYS) {
+            request.addProperty(key, "");
+        }
+        publishGetRequest(deviceName, request);
     }
 
     private void requestPlugState() {
@@ -201,10 +223,19 @@ public class ZigbeeDeviceService {
         return allStates;
     }
 
+    public Map<String, Map<String, Object>> getLightStates() {
+        Map<String, Map<String, Object>> lights = new LinkedHashMap<>();
+        lights.put(OFFICE_LIGHT_1, getDeviceData(OFFICE_LIGHT_1));
+        lights.put(OFFICE_LIGHT_2, getDeviceData(OFFICE_LIGHT_2));
+        return lights;
+    }
+
     public void refreshDevices() {
         log.info("Manual refresh requested");
         requestPlugState();
         requestTiltSensorBattery();
+        requestLightState(OFFICE_LIGHT_1);
+        requestLightState(OFFICE_LIGHT_2);
     }
 
 
