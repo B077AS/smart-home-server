@@ -32,6 +32,11 @@ public class LightService {
         return publish(targetDevice, payload, settings, "preset '" + preset.getName() + "'");
     }
 
+    public CompletableFuture<Map<String, Object>> setState(String targetDevice, Map<String, Object> settings) {
+        JsonObject payload = gson.toJsonTree(settings).getAsJsonObject();
+        return publish(targetDevice, payload, settings, "state update");
+    }
+
     public CompletableFuture<Void> setPower(String targetDevice, boolean on) {
         JsonObject command = new JsonObject();
         command.addProperty("state", on ? "ON" : "OFF");

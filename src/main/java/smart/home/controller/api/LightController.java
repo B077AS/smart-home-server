@@ -82,6 +82,37 @@ public class LightController {
         }
     }
 
+    @PatchMapping("/{deviceName}/state")
+    public ResponseEntity<?> setState(@PathVariable String deviceName, @RequestBody Map<String, Object> body) {
+        if (body == null || body.isEmpty()) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.builder()
+                            .message("Request body must include at least one setting (brightness, color, color_temp...)")
+                            .error("BAD_REQUEST")
+                            .status(400)
+                            .build());
+        }
+
+        String username = SecurityUtil.getCurrentUser().getUsername();
+        log.info("Set state {} on {} requested by {}", body, deviceName, username);
+
+        try {
+            Map<String, Object> applied = lightService.setState(deviceName, body).join();
+            return ResponseEntity.ok(Map.of(
+                    "message", "Updated " + deviceName,
+                    "applied", applied
+            ));
+        } catch (Exception e) {
+            log.error("Failed to set state {} on {}", body, deviceName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ErrorResponse.builder()
+                            .message("Failed to update " + deviceName)
+                            .error(e.getMessage())
+                            .status(500)
+                            .build());
+        }
+    }
+
     @PostMapping("/{deviceName}/on")
     public ResponseEntity<?> turnOn(@PathVariable String deviceName) {
         return setPower(deviceName, true);

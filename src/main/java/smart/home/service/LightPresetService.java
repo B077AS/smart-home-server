@@ -29,7 +29,7 @@ public class LightPresetService {
     // Settings worth snapshotting into a preset — excludes read-only/reporting fields
     // like linkquality, device_temperature, power_outage_count, and the raw "state" on/off.
     private static final Set<String> PRESET_KEYS = Set.of(
-            "color_temp", "color", "effect", "effect_speed", "power_on_behavior",
+            "brightness", "color_temp", "color", "effect", "effect_speed", "power_on_behavior",
             "dimming_range_minimum", "dimming_range_maximum",
             "transition_curve_curvature", "transition_initial_brightness", "level_config"
     );
