@@ -102,11 +102,47 @@ public class LightController {
                     "message", "Updated " + deviceName,
                     "applied", applied
             ));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.builder()
+                            .message(e.getMessage())
+                            .error("BAD_REQUEST")
+                            .status(400)
+                            .build());
         } catch (Exception e) {
             log.error("Failed to set state {} on {}", body, deviceName, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ErrorResponse.builder()
                             .message("Failed to update " + deviceName)
+                            .error(e.getMessage())
+                            .status(500)
+                            .build());
+        }
+    }
+
+    @PostMapping("/{deviceName}/reset-to-default")
+    public ResponseEntity<?> resetToDefault(@PathVariable String deviceName) {
+        String username = SecurityUtil.getCurrentUser().getUsername();
+        log.info("Reset {} to default preset requested by {}", deviceName, username);
+
+        try {
+            Map<String, Object> applied = lightService.applyDefaultPreset(deviceName).join();
+            return ResponseEntity.ok(Map.of(
+                    "message", "Reset " + deviceName + " to default preset",
+                    "applied", applied
+            ));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ErrorResponse.builder()
+                            .message(e.getMessage())
+                            .error("NOT_FOUND")
+                            .status(404)
+                            .build());
+        } catch (Exception e) {
+            log.error("Failed to reset {} to default preset", deviceName, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ErrorResponse.builder()
+                            .message("Failed to reset " + deviceName)
                             .error(e.getMessage())
                             .status(500)
                             .build());

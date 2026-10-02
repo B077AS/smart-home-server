@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import smart.home.entity.LightPreset;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -23,6 +25,8 @@ public class LightService {
     private final Mqtt5AsyncClient mqttClient;
     private final Gson gson = new Gson();
 
+    private static final Set<String> ALLOWED_EFFECTS = Set.of("off", "breathing", "candlelight", "fading", "flash");
+
     public CompletableFuture<Map<String, Object>> applyPreset(String targetDevice, UUID presetId) {
         LightPreset preset = lightPresetService.getById(presetId);
         Map<String, Object> settings = lightPresetService.parseSettings(preset);
@@ -32,9 +36,48 @@ public class LightService {
         return publish(targetDevice, payload, settings, "preset '" + preset.getName() + "'");
     }
 
+    public CompletableFuture<Map<String, Object>> applyDefaultPreset(String targetDevice) {
+        LightPreset defaultPreset = lightPresetService.getDefaultPreset();
+        return applyPreset(targetDevice, defaultPreset.getId());
+    }
+
     public CompletableFuture<Map<String, Object>> setState(String targetDevice, Map<String, Object> settings) {
+        validateEffectSettings(settings);
         JsonObject payload = gson.toJsonTree(settings).getAsJsonObject();
         return publish(targetDevice, payload, settings, "state update");
+    }
+
+    private void validateEffectSettings(Map<String, Object> settings) {
+        if (settings.containsKey("effect")) {
+            Object effect = settings.get("effect");
+            if (!(effect instanceof String) || !ALLOWED_EFFECTS.contains(effect)) {
+                throw new IllegalArgumentException("Invalid effect '" + effect + "'. Allowed: " + ALLOWED_EFFECTS);
+            }
+        }
+
+        if (settings.containsKey("effect_speed")) {
+            Object speed = settings.get("effect_speed");
+            if (!(speed instanceof Number) || ((Number) speed).doubleValue() < 0 || ((Number) speed).doubleValue() > 100) {
+                throw new IllegalArgumentException("Invalid effect_speed '" + speed + "'. Must be a number between 0 and 100");
+            }
+        }
+
+        if (settings.containsKey("effect_colors")) {
+            Object colors = settings.get("effect_colors");
+            if (!(colors instanceof List<?> colorList) || colorList.isEmpty() || colorList.size() > 8) {
+                throw new IllegalArgumentException("Invalid effect_colors: must be an array of 1-8 color objects");
+            }
+            for (Object entry : colorList) {
+                if (!(entry instanceof Map<?, ?> color) || !isValidColorChannel(color.get("r"))
+                        || !isValidColorChannel(color.get("g")) || !isValidColorChannel(color.get("b"))) {
+                    throw new IllegalArgumentException("Invalid effect_colors entry: each color needs r/g/b numbers between 0 and 255");
+                }
+            }
+        }
+    }
+
+    private boolean isValidColorChannel(Object value) {
+        return value instanceof Number number && number.doubleValue() >= 0 && number.doubleValue() <= 255;
     }
 
     public CompletableFuture<Void> setPower(String targetDevice, boolean on) {
