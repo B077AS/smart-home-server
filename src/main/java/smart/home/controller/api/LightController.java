@@ -9,6 +9,7 @@ import smart.home.dto.ErrorResponse;
 import smart.home.dto.SuccessResponse;
 import smart.home.security.SecurityUtil;
 import smart.home.service.LightService;
+import smart.home.service.LightSettingService;
 import smart.home.service.ZigbeeDeviceService;
 
 import java.util.Map;
@@ -23,6 +24,7 @@ public class LightController {
 
     private final ZigbeeDeviceService zigbeeDeviceService;
     private final LightService lightService;
+    private final LightSettingService lightSettingService;
 
     @GetMapping
     public ResponseEntity<Map<String, Map<String, Object>>> getLightStates() {
@@ -157,6 +159,40 @@ public class LightController {
     @PostMapping("/{deviceName}/off")
     public ResponseEntity<?> turnOff(@PathVariable String deviceName) {
         return setPower(deviceName, false);
+    }
+
+    @GetMapping("/fades")
+    public ResponseEntity<Map<String, Double>> getFades() {
+        return ResponseEntity.ok(lightSettingService.getAllTransitionSeconds());
+    }
+
+    @PutMapping("/{deviceName}/fade")
+    public ResponseEntity<?> setFade(@PathVariable String deviceName, @RequestBody Map<String, Object> body) {
+        Object seconds = body == null ? null : body.get("seconds");
+        if (!(seconds instanceof Number number)) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.builder()
+                            .message("Request body must include a numeric 'seconds'")
+                            .error("BAD_REQUEST")
+                            .status(400)
+                            .build());
+        }
+
+        String username = SecurityUtil.getCurrentUser().getUsername();
+        log.info("Set fade of {} to {}s requested by {}", deviceName, number, username);
+
+        try {
+            double saved = lightSettingService.setTransitionSeconds(deviceName, number.doubleValue());
+            lightService.clearBulbOwnFade(deviceName);
+            return ResponseEntity.ok(Map.of("deviceName", deviceName, "seconds", saved));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(ErrorResponse.builder()
+                            .message(e.getMessage())
+                            .error("BAD_REQUEST")
+                            .status(400)
+                            .build());
+        }
     }
 
     private ResponseEntity<?> setPower(String deviceName, boolean on) {

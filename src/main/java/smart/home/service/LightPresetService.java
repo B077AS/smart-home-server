@@ -31,7 +31,7 @@ public class LightPresetService {
     private static final Set<String> PRESET_KEYS = Set.of(
             "brightness", "color_temp", "color", "effect", "effect_speed", "power_on_behavior",
             "dimming_range_minimum", "dimming_range_maximum",
-            "transition_curve_curvature", "transition_initial_brightness", "level_config"
+            "transition_curve_curvature", "transition_initial_brightness"
     );
 
     @Transactional
